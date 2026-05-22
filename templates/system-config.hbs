@@ -1,0 +1,203 @@
+<div class="sqt-window sqt-config" data-sqt-theme="{{themeId}}">
+
+  <header class="sqt-header">
+    <div class="sqt-header-brand">
+      <i class="fas fa-cog sqt-header-icon"></i>
+      <h1 class="sqt-header-title">{{localize "QUESTTRACKER.Settings.Title"}}</h1>
+    </div>
+  </header>
+
+  <div class="sqt-config-body">
+
+    {{!-- ════ SYSTEM SECTION ════ --}}
+    <section class="sqt-config-section">
+      <h2 class="sqt-section-title">
+        <i class="fas fa-dice-d20"></i>
+        {{localize "QUESTTRACKER.Settings.System.Title"}}
+      </h2>
+
+      <div class="sqt-form-row">
+        <label for="sqt-system-preset" class="sqt-form-label">
+          {{localize "QUESTTRACKER.Settings.System.Preset"}}
+        </label>
+        <div class="sqt-form-control">
+          <select id="sqt-system-preset" name="systemPreset">
+            {{#each systemPresets}}
+              <option value="{{id}}" {{#if (sqt-eq ../sysConfig.preset id)}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+          <button type="button" data-action="loadPreset" class="sqt-btn sqt-sm">
+            <i class="fas fa-sync-alt"></i> Load Preset
+          </button>
+          <p class="sqt-hint">{{localize "QUESTTRACKER.Settings.System.PresetHint"}}</p>
+        </div>
+      </div>
+
+      <div class="sqt-form-row">
+        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.System.XPEnabled"}}</label>
+        <div class="sqt-form-control sqt-toggle-row">
+          <input type="checkbox" id="sqt-xp-enabled" {{#if sysConfig.xpEnabled}}checked{{/if}}>
+          <label for="sqt-xp-enabled" class="sqt-toggle-label">
+            {{localize "QUESTTRACKER.Settings.System.XPEnabledHint"}}
+          </label>
+        </div>
+      </div>
+
+      <div class="sqt-form-row">
+        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.System.CurrencyEnabled"}}</label>
+        <div class="sqt-form-control sqt-toggle-row">
+          <input type="checkbox" id="sqt-currency-enabled" {{#if sysConfig.currencyEnabled}}checked{{/if}}>
+          <label for="sqt-currency-enabled" class="sqt-toggle-label">
+            {{localize "QUESTTRACKER.Settings.System.CurrencyEnabledHint"}}
+          </label>
+        </div>
+      </div>
+
+      {{!-- Currency Types --}}
+      <div class="sqt-form-group">
+        <label class="sqt-form-label">
+          {{localize "QUESTTRACKER.Settings.System.CurrencyTypes"}}
+        </label>
+        <div class="sqt-currency-header sqt-form-row-inner">
+          <span>{{localize "QUESTTRACKER.Settings.System.CurrencyKey"}}</span>
+          <span>{{localize "QUESTTRACKER.Settings.System.CurrencyLabel"}}</span>
+          <span>{{localize "QUESTTRACKER.Settings.System.CurrencyConversion"}}</span>
+          <span></span>
+        </div>
+        <div id="sqt-currency-list" class="sqt-currency-list">
+          {{#each currency}}
+            <div class="sqt-currency-row">
+              <input type="text" class="sqt-cur-key"   value="{{key}}"        placeholder="gp"   maxlength="8">
+              <input type="text" class="sqt-cur-label" value="{{label}}"      placeholder="Gold">
+              <input type="number" class="sqt-cur-conv" value="{{conversion}}" placeholder="1.0" step="0.01" min="0">
+              <button type="button" data-action="removeCurrency" class="sqt-icon-btn sqt-sm sqt-danger" title="Remove">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          {{/each}}
+        </div>
+        <button type="button" data-action="addCurrency" class="sqt-btn sqt-sm">
+          <i class="fas fa-plus"></i> {{localize "QUESTTRACKER.Settings.System.AddCurrency"}}
+        </button>
+      </div>
+    </section>
+
+    {{!-- ════ THEME SECTION ════ --}}
+    <section class="sqt-config-section">
+      <h2 class="sqt-section-title">
+        <i class="fas fa-palette"></i>
+        {{localize "QUESTTRACKER.Settings.Theme.Title"}}
+      </h2>
+
+      <div class="sqt-form-row">
+        <label for="sqt-theme-select" class="sqt-form-label">
+          {{localize "QUESTTRACKER.Settings.Theme.SelectTheme"}}
+        </label>
+        <div class="sqt-form-control">
+          <select id="sqt-theme-select">
+            {{#each themeCategories}}
+              <optgroup label="{{label}}">
+                {{#each themes}}
+                  <option value="{{id}}" {{#if (sqt-eq ../../themeId id)}}selected{{/if}}>
+                    {{label}} — {{description}}
+                  </option>
+                {{/each}}
+              </optgroup>
+            {{/each}}
+          </select>
+          <button type="button" data-action="previewTheme" class="sqt-btn sqt-sm">
+            <i class="fas fa-eye"></i> Preview
+          </button>
+        </div>
+      </div>
+
+      {{!-- Custom theme overrides (shown when "custom" is selected) --}}
+      <details class="sqt-custom-theme-details">
+        <summary>{{localize "QUESTTRACKER.Settings.Theme.CustomColors"}}</summary>
+        <div class="sqt-custom-theme-grid">
+          <div class="sqt-custom-var-row">
+            <label>Primary Background</label>
+            <input type="color" class="sqt-custom-var" data-var="--sqt-bg-primary"
+                   value="{{lookup customVars '--sqt-bg-primary'}}">
+            <input type="text"  class="sqt-custom-var-hex" placeholder="#2d2d2d">
+          </div>
+          <div class="sqt-custom-var-row">
+            <label>Secondary Background</label>
+            <input type="color" class="sqt-custom-var" data-var="--sqt-bg-secondary"
+                   value="{{lookup customVars '--sqt-bg-secondary'}}">
+            <input type="text"  class="sqt-custom-var-hex" placeholder="#1a1a1a">
+          </div>
+          <div class="sqt-custom-var-row">
+            <label>Primary Text</label>
+            <input type="color" class="sqt-custom-var" data-var="--sqt-text-primary"
+                   value="{{lookup customVars '--sqt-text-primary'}}">
+            <input type="text"  class="sqt-custom-var-hex" placeholder="#e0e0e0">
+          </div>
+          <div class="sqt-custom-var-row">
+            <label>Accent Color</label>
+            <input type="color" class="sqt-custom-var" data-var="--sqt-accent"
+                   value="{{lookup customVars '--sqt-accent'}}">
+            <input type="text"  class="sqt-custom-var-hex" placeholder="#c9aa71">
+          </div>
+          <div class="sqt-custom-var-row">
+            <label>Border Color</label>
+            <input type="color" class="sqt-custom-var" data-var="--sqt-border"
+                   value="{{lookup customVars '--sqt-border'}}">
+            <input type="text"  class="sqt-custom-var-hex" placeholder="#4a4a4a">
+          </div>
+          <div class="sqt-custom-var-row sqt-full-width">
+            <label>Heading Font</label>
+            <input type="text" class="sqt-custom-var" data-var="--sqt-font-heading"
+                   value="{{lookup customVars '--sqt-font-heading'}}" placeholder="'Palatino Linotype', serif">
+          </div>
+          <div class="sqt-custom-var-row sqt-full-width">
+            <label>Body Font</label>
+            <input type="text" class="sqt-custom-var" data-var="--sqt-font-body"
+                   value="{{lookup customVars '--sqt-font-body'}}" placeholder="'Georgia', serif">
+          </div>
+        </div>
+      </details>
+    </section>
+
+    {{!-- ════ NOTIFICATIONS SECTION ════ --}}
+    <section class="sqt-config-section">
+      <h2 class="sqt-section-title">
+        <i class="fas fa-bell"></i>
+        {{localize "QUESTTRACKER.Settings.Notifications.Title"}}
+      </h2>
+
+      <div class="sqt-form-row">
+        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.Notifications.QuestNoteEnabled"}}</label>
+        <div class="sqt-form-control sqt-toggle-row">
+          <input type="checkbox" id="sqt-note-enabled"
+                 {{#if notifPrefs.questNoteEnabled}}checked{{/if}}>
+          <label for="sqt-note-enabled" class="sqt-toggle-label">
+            {{localize "QUESTTRACKER.Settings.Notifications.QuestNoteEnabledHint"}}
+          </label>
+        </div>
+      </div>
+
+      <div class="sqt-form-row">
+        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.Notifications.AutoShowActive"}}</label>
+        <div class="sqt-form-control sqt-toggle-row">
+          <input type="checkbox" id="sqt-auto-tracker"
+                 {{#if notifPrefs.autoShowTracker}}checked{{/if}}>
+          <label for="sqt-auto-tracker" class="sqt-toggle-label">
+            {{localize "QUESTTRACKER.Settings.Notifications.AutoShowActiveHint"}}
+          </label>
+        </div>
+      </div>
+    </section>
+
+  </div>{{!-- /.sqt-config-body --}}
+
+  <footer class="sqt-sheet-footer">
+    <button type="button" data-action="save" class="sqt-btn sqt-primary">
+      <i class="fas fa-save"></i> {{localize "QUESTTRACKER.Save"}}
+    </button>
+    <button type="button" data-action="cancel" class="sqt-btn">
+      <i class="fas fa-times"></i> {{localize "QUESTTRACKER.Cancel"}}
+    </button>
+  </footer>
+
+</div>

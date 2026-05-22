@@ -1,0 +1,67 @@
+{{!-- Quest Note popup — appearance driven by noteStyle (scroll / datapad / hologram / scroll-dark) --}}
+<div class="sqt-note-frame sqt-note-style-{{noteStyle}}" data-sqt-theme="{{themeId}}">
+
+  {{!-- ── Scroll / Parchment styles ── --}}
+  {{#if (sqt-eq noteStyle "scroll")}}
+    <div class="sqt-scroll-top"></div>
+  {{/if}}
+  {{#if (sqt-eq noteStyle "scroll-dark")}}
+    <div class="sqt-scroll-top sqt-scroll-dark"></div>
+  {{/if}}
+
+  {{!-- ── Hologram / Datapad scanlines ── --}}
+  {{#if (sqt-eq noteStyle "hologram")}}
+    <div class="sqt-holo-scanlines"></div>
+    <div class="sqt-holo-flicker"></div>
+  {{/if}}
+  {{#if (sqt-eq noteStyle "datapad")}}
+    <div class="sqt-datapad-chrome"></div>
+  {{/if}}
+
+  {{!-- ── Content ── --}}
+  <div class="sqt-note-content">
+    <header class="sqt-note-header">
+      <span class="sqt-note-label">{{localize "QUESTTRACKER.QuestNote.NewQuest"}}</span>
+      <h2 class="sqt-note-title">{{quest.name}}</h2>
+      {{#if quest.questgiver}}
+        <p class="sqt-note-giver">
+          <img src="{{quest.questgiver.img}}" class="sqt-note-giver-img">
+          {{quest.questgiver.name}}
+        </p>
+      {{/if}}
+    </header>
+
+    {{#if quest.description}}
+      <div class="sqt-note-desc">{{{quest.description}}}</div>
+    {{/if}}
+
+    {{#if objectives.length}}
+      <div class="sqt-note-objectives">
+        <h3>{{localize "QUESTTRACKER.QuestNote.Objectives"}}</h3>
+        <ul>
+          {{#each objectives}}
+            <li>{{text}}</li>
+          {{/each}}
+        </ul>
+      </div>
+    {{/if}}
+  </div>
+
+  {{!-- ── Actions ── --}}
+  <footer class="sqt-note-footer">
+    <button type="button" data-action="viewTracker" class="sqt-btn sqt-primary sqt-sm">
+      <i class="fas fa-scroll"></i> {{localize "QUESTTRACKER.QuestNote.ViewTracker"}}
+    </button>
+    <button type="button" data-action="dismiss" class="sqt-btn sqt-sm">
+      {{localize "QUESTTRACKER.QuestNote.Dismiss"}}
+    </button>
+  </footer>
+
+  {{#if (sqt-eq noteStyle "scroll")}}
+    <div class="sqt-scroll-bottom"></div>
+  {{/if}}
+  {{#if (sqt-eq noteStyle "scroll-dark")}}
+    <div class="sqt-scroll-bottom sqt-scroll-dark"></div>
+  {{/if}}
+
+</div>

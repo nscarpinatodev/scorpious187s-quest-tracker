@@ -1,0 +1,283 @@
+<div class="sqt-window sqt-sheet" data-sqt-theme="{{themeId}}">
+
+  {{#if missing}}
+    <div class="sqt-missing">
+      <i class="fas fa-exclamation-triangle"></i>
+      <p>{{localize "QUESTTRACKER.Errors.QuestNotFound"}}</p>
+    </div>
+  {{else}}
+
+  {{!-- ── Sheet Header ── --}}
+  <header class="sqt-sheet-header">
+    {{!-- Quest Image --}}
+    <div class="sqt-quest-portrait {{#if isGM}}sqt-clickable{{/if}}"
+         {{#if isGM}}data-action="pickImage" title="Click to change image"{{/if}}>
+      <img src="{{sqt-img-or quest.img 'icons/svg/book.svg'}}" alt="{{quest.name}}" class="sqt-portrait-img">
+      {{#if isGM}}<div class="sqt-portrait-overlay"><i class="fas fa-camera"></i></div>{{/if}}
+    </div>
+
+    <div class="sqt-sheet-header-info">
+      <input type="text" name="name" value="{{quest.name}}" class="sqt-title-input"
+             {{#unless isGM}}readonly{{/unless}} placeholder="{{localize 'QUESTTRACKER.Quest.Name'}}">
+      <div class="sqt-sheet-meta">
+        {{#if isGM}}
+          <select name="status" class="sqt-status-select sqt-status-{{quest.status}}">
+            {{#each statusOptions}}
+              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        {{else}}
+          <span class="sqt-status-badge sqt-status-{{quest.status}}">
+            {{sqt-localize-status quest.status}}
+          </span>
+        {{/if}}
+        {{#if quest.questgiver}}
+          <span class="sqt-sheet-giver">
+            <img src="{{quest.questgiver.img}}" class="sqt-mini-portrait"> {{quest.questgiver.name}}
+          </span>
+        {{/if}}
+      </div>
+    </div>
+  </header>
+
+  {{!-- ── Sheet Body ── --}}
+  <form class="sqt-sheet-form" autocomplete="off">
+    <div class="sqt-sheet-body">
+
+      {{!-- ── Description ── --}}
+      <section class="sqt-section">
+        <h2 class="sqt-section-title">
+          <i class="fas fa-align-left"></i> {{localize "QUESTTRACKER.Quest.Description"}}
+        </h2>
+        {{#if isGM}}
+          <div class="sqt-editor" data-edit="description">{{{quest.description}}}</div>
+        {{else}}
+          <div class="sqt-prose">{{{quest.description}}}</div>
+        {{/if}}
+      </section>
+
+      {{!-- ── Objectives ── --}}
+      <section class="sqt-section">
+        <h2 class="sqt-section-title">
+          <i class="fas fa-tasks"></i> {{localize "QUESTTRACKER.Quest.Objectives"}}
+          {{#if isGM}}
+            <button type="button" data-action="addObjective" class="sqt-icon-btn sqt-sm sqt-inline">
+              <i class="fas fa-plus"></i>
+            </button>
+          {{/if}}
+        </h2>
+        <ul class="sqt-objectives">
+          {{#each quest.objectives}}
+            <li class="sqt-objective-row {{#if completed}}completed{{/if}}" data-objective-id="{{id}}">
+              <input type="checkbox" class="sqt-obj-check" {{#if completed}}checked{{/if}}
+                     data-action="toggleObjective" title="Toggle">
+              {{#if ../isGM}}
+                <input type="text" class="sqt-obj-text" value="{{text}}" placeholder="Objective text…">
+                <button type="button" data-action="removeObjective" class="sqt-icon-btn sqt-sm sqt-danger sqt-inline">
+                  <i class="fas fa-times"></i>
+                </button>
+              {{else}}
+                <span class="sqt-obj-label">{{text}}</span>
+              {{/if}}
+            </li>
+          {{else}}
+            <li class="sqt-objectives-empty">
+              {{#if isGM}}Click + to add objectives.{{else}}No objectives listed.{{/if}}
+            </li>
+          {{/each}}
+        </ul>
+      </section>
+
+      {{!-- ── Questgiver ── --}}
+      <section class="sqt-section sqt-two-col">
+        <div class="sqt-section-col">
+          <h2 class="sqt-section-title">
+            <i class="fas fa-user"></i> {{localize "QUESTTRACKER.Quest.Questgiver"}}
+          </h2>
+          <div class="sqt-drop-zone sqt-questgiver-zone" data-drop-zone="questgiver">
+            {{#if quest.questgiver}}
+              <div class="sqt-linked-entity">
+                <img src="{{sqt-img-or quest.questgiver.img 'icons/svg/mystery-man.svg'}}" class="sqt-entity-img">
+                <span class="sqt-entity-name">{{quest.questgiver.name}}</span>
+                {{#if isGM}}
+                  <button type="button" data-action="removeQuestgiver" class="sqt-icon-btn sqt-sm sqt-danger sqt-inline"
+                          title="{{localize 'QUESTTRACKER.Quest.RemoveQuestgiver'}}">
+                    <i class="fas fa-times"></i>
+                  </button>
+                {{/if}}
+              </div>
+            {{else}}
+              <div class="sqt-drop-hint">
+                <i class="fas fa-user-plus"></i>
+                <span>{{localize "QUESTTRACKER.Quest.QuestgiverHint"}}</span>
+              </div>
+            {{/if}}
+          </div>
+        </div>
+
+        {{!-- ── Location ── --}}
+        <div class="sqt-section-col">
+          <h2 class="sqt-section-title">
+            <i class="fas fa-map-marker-alt"></i> {{localize "QUESTTRACKER.Quest.Location"}}
+          </h2>
+          <div class="sqt-drop-zone sqt-location-zone" data-drop-zone="location">
+            {{#if quest.location}}
+              <div class="sqt-linked-entity">
+                {{#if quest.location.img}}
+                  <img src="{{quest.location.img}}" class="sqt-entity-img">
+                {{else}}
+                  <i class="fas fa-map sqt-entity-icon"></i>
+                {{/if}}
+                <span class="sqt-entity-name">{{quest.location.name}}</span>
+                {{#if isGM}}
+                  <button type="button" data-action="removeLocation" class="sqt-icon-btn sqt-sm sqt-danger sqt-inline"
+                          title="{{localize 'QUESTTRACKER.Quest.RemoveLocation'}}">
+                    <i class="fas fa-times"></i>
+                  </button>
+                {{/if}}
+              </div>
+            {{else}}
+              <div class="sqt-drop-hint">
+                <i class="fas fa-map-pin"></i>
+                <span>{{localize "QUESTTRACKER.Quest.LocationHint"}}</span>
+              </div>
+            {{/if}}
+          </div>
+        </div>
+      </section>
+
+      {{!-- ── Journal Entries ── --}}
+      <section class="sqt-section">
+        <h2 class="sqt-section-title">
+          <i class="fas fa-book-open"></i> {{localize "QUESTTRACKER.Quest.JournalEntries"}}
+        </h2>
+        <div class="sqt-drop-zone sqt-journal-zone" data-drop-zone="journal">
+          {{#if quest.journalEntries.length}}
+            <ul class="sqt-journal-list">
+              {{#each quest.journalEntries}}
+                <li class="sqt-journal-item" data-journal-uuid="{{uuid}}">
+                  <i class="fas fa-book"></i>
+                  <span class="sqt-journal-name">{{name}}</span>
+                  <button type="button" data-action="openJournal" data-journal-uuid="{{uuid}}"
+                          class="sqt-icon-btn sqt-sm sqt-inline"
+                          title="{{localize 'QUESTTRACKER.Quest.OpenEntry'}}">
+                    <i class="fas fa-external-link-alt"></i>
+                  </button>
+                  {{#if ../isGM}}
+                    <button type="button" data-action="removeJournal" data-journal-uuid="{{uuid}}"
+                            class="sqt-icon-btn sqt-sm sqt-danger sqt-inline"
+                            title="{{localize 'QUESTTRACKER.Quest.RemoveEntry'}}">
+                      <i class="fas fa-times"></i>
+                    </button>
+                  {{/if}}
+                </li>
+              {{/each}}
+            </ul>
+          {{else}}
+            <div class="sqt-drop-hint">
+              <i class="fas fa-book-medical"></i>
+              <span>{{localize "QUESTTRACKER.Quest.JournalHint"}}</span>
+            </div>
+          {{/if}}
+        </div>
+      </section>
+
+      {{!-- ── Rewards ── --}}
+      {{#if isGM}}
+        <section class="sqt-section sqt-rewards-section">
+          <h2 class="sqt-section-title">
+            <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.Title"}}
+          </h2>
+
+          <div class="sqt-rewards-grid">
+
+            {{!-- XP --}}
+            {{#if xpEnabled}}
+              <div class="sqt-reward-row">
+                <label class="sqt-reward-label">
+                  <i class="fas fa-star"></i> {{localize "QUESTTRACKER.Rewards.XP"}}
+                </label>
+                <input type="number" name="rewards.xp" value="{{quest.rewards.xp}}"
+                       class="sqt-reward-input" min="0" placeholder="0">
+              </div>
+            {{/if}}
+
+            {{!-- Currency --}}
+            {{#if currencyEnabled}}
+              {{#each currency}}
+                <div class="sqt-reward-row">
+                  <label class="sqt-reward-label">
+                    <i class="fas fa-coins"></i> {{label}}
+                  </label>
+                  <input type="number" class="sqt-reward-input sqt-currency-input"
+                         data-key="{{key}}"
+                         value="{{lookup ../quest.rewards.currency key}}"
+                         min="0" placeholder="0">
+                </div>
+              {{/each}}
+            {{/if}}
+
+            {{!-- Reward Items --}}
+            <div class="sqt-reward-row sqt-reward-items-row">
+              <label class="sqt-reward-label">
+                <i class="fas fa-sack"></i> {{localize "QUESTTRACKER.Rewards.Items"}}
+              </label>
+              <div class="sqt-drop-zone sqt-items-zone" data-drop-zone="reward-item">
+                {{#if quest.rewards.items.length}}
+                  <ul class="sqt-item-list">
+                    {{#each quest.rewards.items}}
+                      <li class="sqt-item-row" data-item-uuid="{{uuid}}">
+                        <img src="{{sqt-img-or img 'icons/svg/mystery-man.svg'}}" class="sqt-item-img">
+                        <span class="sqt-item-name">{{name}}</span>
+                        <input type="number" class="sqt-item-qty" value="{{quantity}}" min="1"
+                               placeholder="1" title="Quantity">
+                        <button type="button" data-action="removeRewardItem" data-item-uuid="{{uuid}}"
+                                class="sqt-icon-btn sqt-sm sqt-danger sqt-inline"
+                                title="{{localize 'QUESTTRACKER.Rewards.RemoveItem'}}">
+                          <i class="fas fa-times"></i>
+                        </button>
+                      </li>
+                    {{/each}}
+                  </ul>
+                {{else}}
+                  <div class="sqt-drop-hint">
+                    <i class="fas fa-hand-holding"></i>
+                    <span>{{localize "QUESTTRACKER.Rewards.ItemHint"}}</span>
+                  </div>
+                {{/if}}
+              </div>
+            </div>
+
+          </div>
+        </section>
+      {{/if}}
+
+      {{!-- ── GM Notes ── --}}
+      {{#if isGM}}
+        <section class="sqt-section sqt-notes-section">
+          <h2 class="sqt-section-title">
+            <i class="fas fa-lock"></i> {{localize "QUESTTRACKER.Quest.Notes"}}
+          </h2>
+          <textarea name="notes" class="sqt-notes-editor" rows="4"
+                    placeholder="Private GM notes…">{{quest.notes}}</textarea>
+        </section>
+      {{/if}}
+
+    </div>{{!-- /.sqt-sheet-body --}}
+
+    {{!-- Footer Buttons --}}
+    {{#if isGM}}
+      <footer class="sqt-sheet-footer">
+        <button type="button" data-action="saveQuest" class="sqt-btn sqt-primary">
+          <i class="fas fa-save"></i> {{localize "QUESTTRACKER.Save"}}
+        </button>
+        <button type="button" data-action="cancel" class="sqt-btn">
+          <i class="fas fa-times"></i> {{localize "QUESTTRACKER.Cancel"}}
+        </button>
+      </footer>
+    {{/if}}
+
+  </form>
+
+  {{/if}}{{!-- end #if missing --}}
+</div>

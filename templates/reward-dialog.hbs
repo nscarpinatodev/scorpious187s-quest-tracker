@@ -1,0 +1,96 @@
+<div class="sqt-window sqt-rewards-dialog">
+
+  {{#if quest}}
+    <div class="sqt-rewards-header">
+      <img src="{{sqt-img-or quest.img 'icons/svg/book.svg'}}" class="sqt-rewards-quest-img">
+      <div>
+        <h2>{{quest.name}}</h2>
+        <p class="sqt-hint">{{localize "QUESTTRACKER.Rewards.ApplyRewardsHint"}}</p>
+      </div>
+    </div>
+
+    {{!-- ── Reward Summary ── --}}
+    <div class="sqt-rewards-summary">
+      {{#if xpEnabled}}
+        {{#if xp}}
+          <div class="sqt-reward-chip">
+            <i class="fas fa-star"></i> {{xp}} {{localize "QUESTTRACKER.Rewards.XP"}}
+          </div>
+        {{/if}}
+      {{/if}}
+
+      {{#if currencyEnabled}}
+        {{#each rewardCurrency}}
+          <div class="sqt-reward-chip">
+            <i class="fas fa-coins"></i> {{amount}} {{label}}
+          </div>
+        {{/each}}
+      {{/if}}
+
+      {{#if hasRewardItems}}
+        <div class="sqt-reward-chip">
+          <i class="fas fa-sack"></i>
+          {{quest.rewards.items.length}} {{localize "QUESTTRACKER.Rewards.Items"}}
+        </div>
+      {{/if}}
+    </div>
+
+    {{!-- ── Distribution Options ── --}}
+    <div class="sqt-rewards-options">
+      {{#if currencyEnabled}}
+        <label class="sqt-toggle-row">
+          <input type="checkbox" id="sqt-split-currency" checked>
+          {{localize "QUESTTRACKER.Rewards.SplitCurrency"}}
+        </label>
+      {{/if}}
+      {{#if xpEnabled}}
+        <label class="sqt-toggle-row">
+          <input type="checkbox" id="sqt-xp-each" checked>
+          {{localize "QUESTTRACKER.Rewards.XPEach"}}
+        </label>
+      {{/if}}
+    </div>
+
+    {{!-- ── Actor List ── --}}
+    <div class="sqt-rewards-actors">
+      <div class="sqt-rewards-actors-header">
+        <span>Select recipients:</span>
+        <button type="button" data-action="toggleAll" class="sqt-btn sqt-sm">
+          Toggle All
+        </button>
+      </div>
+
+      {{#if noActors}}
+        <p class="sqt-hint sqt-warning">
+          <i class="fas fa-exclamation-triangle"></i>
+          {{localize "QUESTTRACKER.Rewards.NoActors"}}
+        </p>
+      {{else}}
+        <ul class="sqt-actor-list">
+          {{#each actors}}
+            <li class="sqt-actor-row">
+              <input type="checkbox" class="sqt-actor-check" data-actor-id="{{id}}" {{#if checked}}checked{{/if}}>
+              <img src="{{sqt-img-or img 'icons/svg/mystery-man.svg'}}" class="sqt-actor-thumb">
+              <span class="sqt-actor-name">{{name}}</span>
+            </li>
+          {{/each}}
+        </ul>
+      {{/if}}
+    </div>
+
+  {{else}}
+    <p class="sqt-hint sqt-warning">{{localize "QUESTTRACKER.Errors.QuestNotFound"}}</p>
+  {{/if}}
+
+  <footer class="sqt-sheet-footer">
+    {{#unless noActors}}
+      <button type="button" data-action="applyRewards" class="sqt-btn sqt-primary">
+        <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.ApplyRewards"}}
+      </button>
+    {{/unless}}
+    <button type="button" data-action="cancel" class="sqt-btn">
+      <i class="fas fa-times"></i> {{localize "QUESTTRACKER.Cancel"}}
+    </button>
+  </footer>
+
+</div>

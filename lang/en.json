@@ -1,0 +1,143 @@
+{
+  "QUESTTRACKER": {
+    "Title": "Quest Tracker",
+    "Open": "Open Quest Tracker",
+    "CreateQuest": "Create New Quest",
+    "OpenSettings": "Module Settings",
+    "Save": "Save",
+    "Cancel": "Cancel",
+    "Delete": "Delete",
+    "Confirm": "Confirm",
+    "Close": "Close",
+    "Edit": "Edit",
+    "Send": "Send to Players",
+    "Complete": "Mark Complete",
+    "Fail": "Mark Failed",
+    "Reactivate": "Reactivate",
+    "MakeAvailable": "Make Available",
+
+    "Tabs": {
+      "Inactive": "Inactive",
+      "Available": "Available",
+      "Active": "Active",
+      "Completed": "Completed",
+      "Failed": "Failed"
+    },
+
+    "NoQuests": {
+      "Inactive": "No inactive quests. Create one with the + button above.",
+      "Available": "No quests available to the party.",
+      "Active": "No quests currently active.",
+      "Completed": "No completed quests yet.",
+      "Failed": "No failed quests."
+    },
+
+    "Quest": {
+      "Name": "Quest Name",
+      "Status": "Status",
+      "Description": "Description",
+      "Objectives": "Objectives",
+      "AddObjective": "Add Objective",
+      "Notes": "GM Notes",
+      "Image": "Quest Image",
+      "Questgiver": "Questgiver",
+      "QuestgiverHint": "Drag an Actor here",
+      "Location": "Location",
+      "LocationHint": "Drag a Scene here",
+      "JournalEntries": "Journal Entries",
+      "JournalHint": "Drag a Journal Entry here",
+      "RemoveQuestgiver": "Remove Questgiver",
+      "RemoveLocation": "Remove Location",
+      "RemoveEntry": "Remove Entry",
+      "OpenEntry": "Open Entry"
+    },
+
+    "Rewards": {
+      "Title": "Rewards",
+      "XP": "Experience Points",
+      "Currency": "Currency",
+      "Items": "Items",
+      "ItemHint": "Drag Items here",
+      "Quantity": "Qty",
+      "RemoveItem": "Remove Item",
+      "ApplyRewards": "Apply Rewards",
+      "ApplyRewardsHint": "Select which party members receive the rewards.",
+      "SplitCurrency": "Split currency evenly",
+      "XPEach": "XP to each member",
+      "NoActors": "No player-controlled actors found.",
+      "RewardsApplied": "Rewards applied to {count} characters.",
+      "RewardsAppliedFull": "Rewards from \"{quest}\" applied to {count} character(s)."
+    },
+
+    "Settings": {
+      "Title": "Quest Tracker Settings",
+      "System": {
+        "Title": "Game System",
+        "Preset": "System Preset",
+        "PresetHint": "Select your game system to auto-configure XP and currency settings.",
+        "XPEnabled": "Enable Experience Points",
+        "XPEnabledHint": "Track XP rewards on quests.",
+        "CurrencyEnabled": "Enable Currency Rewards",
+        "CurrencyEnabledHint": "Track currency rewards on quests.",
+        "CurrencyTypes": "Currency Types",
+        "AddCurrency": "Add Currency",
+        "CurrencyKey": "Key",
+        "CurrencyLabel": "Label",
+        "CurrencyConversion": "GP Value"
+      },
+      "Theme": {
+        "Title": "Appearance & Theme",
+        "SelectTheme": "Select Theme",
+        "ThemeCategory": "Theme Category",
+        "CustomColors": "Custom Colors",
+        "PrimaryBg": "Primary Background",
+        "SecondaryBg": "Secondary Background",
+        "PrimaryText": "Primary Text",
+        "SecondaryText": "Secondary Text",
+        "AccentColor": "Accent Color",
+        "BorderColor": "Border Color",
+        "FontPrimary": "Heading Font",
+        "FontSecondary": "Body Font"
+      },
+      "Notifications": {
+        "Title": "Quest Notifications",
+        "QuestNoteEnabled": "Enable Quest Note Popups",
+        "QuestNoteEnabledHint": "Show a themed popup when a quest becomes available.",
+        "AutoShowActive": "Auto-show tracker for players",
+        "AutoShowActiveHint": "Automatically open the quest tracker for players when a new quest becomes active."
+      },
+      "Saved": "Settings saved.",
+      "SaveFailed": "Failed to save settings."
+    },
+
+    "QuestNote": {
+      "NewQuest": "New Quest",
+      "Objectives": "Objectives",
+      "Dismiss": "Dismiss",
+      "ViewTracker": "View Quest Log"
+    },
+
+    "Status": {
+      "inactive": "Inactive",
+      "available": "Available",
+      "active": "Active",
+      "completed": "Completed",
+      "failed": "Failed"
+    },
+
+    "Confirm": {
+      "DeleteQuest": "Delete Quest",
+      "DeleteQuestMessage": "Are you sure you want to delete the quest \"{name}\"? This cannot be undone.",
+      "CompleteQuest": "Complete Quest",
+      "CompleteQuestMessage": "Mark \"{name}\" as completed? This will trigger the reward application dialog.",
+      "FailQuest": "Fail Quest",
+      "FailQuestMessage": "Mark \"{name}\" as failed?"
+    },
+
+    "Errors": {
+      "QuestNotFound": "Quest not found.",
+      "CannotApplyRewards": "Cannot apply rewards for this system. Configure a system preset in settings.",
+      "DragInvalidType": "This drop target does not accept {type} items."
+    }
+  }
+}

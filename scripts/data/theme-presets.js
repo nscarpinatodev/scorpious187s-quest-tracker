@@ -42,7 +42,7 @@ export const THEME_CATEGORIES = [
           '--sqt-font-heading':  "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
           '--sqt-font-body':     "'Georgia', 'Times New Roman', serif",
           '--sqt-radius':        '4px',
-          '--sqt-header-texture':'url("modules/scorpious-quest-tracker/assets/textures/parchment-dark.png")',
+          '--sqt-header-texture':'url("modules/scorpious187s-quest-tracker/assets/textures/parchment-dark.png")',
         },
       },
       {

@@ -1,4 +1,4 @@
-export const MODULE_ID = 'scorpious-quest-tracker';
+export const MODULE_ID = 'scorpious187s-quest-tracker';
 export const MODULE_TITLE = 'Scorpious Quest Tracker';
 export const SOCKET_NAME = `module.${MODULE_ID}`;
 

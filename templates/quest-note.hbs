@@ -20,8 +20,10 @@
 
   {{!-- ── Content ── --}}
   <div class="sqt-note-content">
+
+    {{!-- Shared header structure for all notification types --}}
     <header class="sqt-note-header">
-      <span class="sqt-note-label">{{localize "QUESTTRACKER.QuestNote.NewQuest"}}</span>
+      <span class="sqt-note-label">{{noteLabel}}</span>
       <h2 class="sqt-note-title">{{quest.name}}</h2>
       {{#if quest.questgiver}}
         <p class="sqt-note-giver">
@@ -31,20 +33,31 @@
       {{/if}}
     </header>
 
-    {{#if quest.description}}
-      <div class="sqt-note-desc">{{{quest.description}}}</div>
+    {{#if isObjectiveNote}}
+
+      {{!-- Objective notification: show the specific objective text --}}
+      <div class="sqt-note-desc">{{objectiveText}}</div>
+
+    {{else}}
+
+      {{!-- Quest status notification: show description and objectives list --}}
+      {{#if quest.description}}
+        <div class="sqt-note-desc">{{{quest.description}}}</div>
+      {{/if}}
+
+      {{#if objectives.length}}
+        <div class="sqt-note-objectives">
+          <h3>{{localize "QUESTTRACKER.QuestNote.Objectives"}}</h3>
+          <ul>
+            {{#each objectives}}
+              <li>{{text}}</li>
+            {{/each}}
+          </ul>
+        </div>
+      {{/if}}
+
     {{/if}}
 
-    {{#if objectives.length}}
-      <div class="sqt-note-objectives">
-        <h3>{{localize "QUESTTRACKER.QuestNote.Objectives"}}</h3>
-        <ul>
-          {{#each objectives}}
-            <li>{{text}}</li>
-          {{/each}}
-        </ul>
-      </div>
-    {{/if}}
   </div>
 
   {{!-- ── Actions ── --}}

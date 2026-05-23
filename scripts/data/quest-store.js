@@ -51,10 +51,16 @@ export class QuestStore {
   static async update(id, updates) {
     const all = QuestStore.getAll();
     if (!all[id]) throw new Error(`Quest ${id} not found`);
+    const prevStatus = all[id].status;
     all[id] = foundry.utils.mergeObject(all[id], updates, { inplace: false });
     all[id].updatedAt = Date.now();
     await game.settings.set(MODULE_ID, SETTINGS.QUESTS, all);
     Hooks.callAll('sqt.questUpdated', all[id]);
+    const newStatus = all[id].status;
+    if (newStatus !== prevStatus &&
+        (newStatus === QUEST_STATUS.AVAILABLE || newStatus === QUEST_STATUS.ACTIVE)) {
+      Hooks.callAll('sqt.questBecameVisible', id, newStatus);
+    }
     return all[id];
   }
 

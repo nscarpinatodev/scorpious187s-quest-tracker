@@ -11,6 +11,11 @@ export function registerSettings() {
     config: false,
     type: Object,
     default: {},
+    onChange: () => {
+      // Fires on ALL clients (including players) when the GM saves quest data.
+      // Use this to drive cross-client UI refreshes instead of a custom socket.
+      Hooks.callAll('sqt.questDataRefresh');
+    },
   });
 
   // ── System Configuration (world) ────────────────────────────────────────
@@ -24,18 +29,19 @@ export function registerSettings() {
       xpEnabled: true,
       currencyEnabled: true,
       currency: [],
+      minObjectiveRole: 1,
+      dragPermission: 'gm',
     },
     onChange: () => Hooks.callAll('sqt.systemConfigChanged'),
   });
 
-  // ── Active Theme (client) ───────────────────────────────────────────────
+  // ── Active Theme (world) — GM-controlled, propagates to all clients ────
   game.settings.register(MODULE_ID, SETTINGS.THEME, {
     name: game.i18n.localize('QUESTTRACKER.Settings.Theme.SelectTheme'),
     hint: 'Visual theme for the quest tracker.',
-    scope: 'client',
-    config: true,
+    scope: 'world',
+    config: false,
     type: String,
-    choices: getThemeChoices(),
     default: 'fantasy-parchment',
     onChange: (value) => {
       Hooks.callAll('sqt.themeChanged', value);
@@ -68,7 +74,7 @@ export function registerSettings() {
     type: Object,
     default: {
       questNoteEnabled: true,
-      autoShowTracker: true,
+      autoShowTracker: false,
     },
   });
 

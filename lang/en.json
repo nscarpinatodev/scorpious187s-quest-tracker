@@ -17,19 +17,19 @@
     "MakeAvailable": "Make Available",
 
     "Tabs": {
-      "Inactive": "Inactive",
-      "Available": "Available",
-      "Active": "Active",
-      "Completed": "Completed",
-      "Failed": "Failed"
+      "inactive":  "Inactive Quests",
+      "available": "Available Quests",
+      "active":    "Active Quests",
+      "completed": "Completed Quests",
+      "failed":    "Failed Quests"
     },
 
     "NoQuests": {
-      "Inactive": "No inactive quests. Create one with the + button above.",
-      "Available": "No quests available to the party.",
-      "Active": "No quests currently active.",
-      "Completed": "No completed quests yet.",
-      "Failed": "No failed quests."
+      "inactive":  "No inactive quests. Create one with the + button above.",
+      "available": "No quests available to the party.",
+      "active":    "No quests currently active.",
+      "completed": "No completed quests yet.",
+      "failed":    "No failed quests."
     },
 
     "Quest": {
@@ -66,7 +66,12 @@
       "XPEach": "XP to each member",
       "NoActors": "No player-controlled actors found.",
       "RewardsApplied": "Rewards applied to {count} characters.",
-      "RewardsAppliedFull": "Rewards from \"{quest}\" applied to {count} character(s)."
+      "RewardsAppliedFull": "Rewards from \"{quest}\" applied to {count} character(s).",
+      "SelectRecipients": "Select recipients (XP & Currency):",
+      "ToggleAll": "Toggle All",
+      "ItemDistribution": "Item Recipients:",
+      "AllRecipients": "— All Selected —",
+      "ChatCardTitle": "Quest Rewards Distributed"
     },
 
     "Settings": {
@@ -83,7 +88,11 @@
         "AddCurrency": "Add Currency",
         "CurrencyKey": "Key",
         "CurrencyLabel": "Label",
-        "CurrencyConversion": "GP Value"
+        "CurrencyConversion": "GP Value",
+        "MinObjectiveRole": "Objective Toggle Permission",
+        "MinObjectiveRoleHint": "Minimum player role required to check/uncheck objectives.",
+        "DragPermission": "Allow Players to Drop Items",
+        "DragPermissionHint": "Which players can drag actors, scenes, items, and journals onto quests."
       },
       "Theme": {
         "Title": "Appearance & Theme",
@@ -112,6 +121,12 @@
 
     "QuestNote": {
       "NewQuest": "New Quest",
+      "NewQuestAvailable": "New Quest Available",
+      "QuestAccepted": "Quest Accepted",
+      "QuestCompleted": "Quest Completed",
+      "QuestFailed": "Quest Failed",
+      "ObjectiveCompleted": "Objective Completed",
+      "NewObjective": "New Objective",
       "Objectives": "Objectives",
       "Dismiss": "Dismiss",
       "ViewTracker": "View Quest Log"

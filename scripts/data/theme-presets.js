@@ -42,7 +42,7 @@ export const THEME_CATEGORIES = [
           '--sqt-font-heading':  "'Palatino Linotype', 'Book Antiqua', Palatino, serif",
           '--sqt-font-body':     "'Georgia', 'Times New Roman', serif",
           '--sqt-radius':        '4px',
-          '--sqt-header-texture':'url("modules/scorpious187s-quest-tracker/assets/textures/parchment-dark.png")',
+          '--sqt-header-texture':'none',
         },
       },
       {
@@ -302,6 +302,9 @@ export const THEME_CATEGORIES = [
           '--sqt-font-body':     "'Segoe UI', sans-serif",
           '--sqt-radius':        '3px',
           '--sqt-header-texture':'none',
+          '--sqt-input-border':  '#e06020',
+          '--sqt-input-bg':      '#160b04',
+          '--sqt-input-text':    '#ff8040',
         },
       },
       {

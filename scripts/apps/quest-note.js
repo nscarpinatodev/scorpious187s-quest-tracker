@@ -34,33 +34,62 @@ export class QuestNoteApp extends HandlebarsApplicationMixin(ApplicationV2) {
     },
   };
 
-  /** @param {string} questId */
-  constructor(questId, options = {}) {
-    super(options);
-    this.questId = questId;
+  /**
+   * @param {string} questId
+   * @param {object} [noteOptions]
+   * @param {'quest'|'objective'} [noteOptions.type]
+   * @param {string}  [noteOptions.status]        - quest status for type:'quest'
+   * @param {string}  [noteOptions.objectiveText] - objective text for type:'objective'
+   */
+  constructor(questId, noteOptions = {}, appOptions = {}) {
+    super(appOptions);
+    this.questId     = questId;
+    this._noteOptions = noteOptions;
   }
 
   get quest() { return QuestStore.get(this.questId); }
 
   /** Show the note for a quest (respects user notification prefs). */
-  static show(questId) {
+  static show(questId, noteOptions = {}) {
     const prefs = game.settings.get(MODULE_ID, SETTINGS.NOTIFICATIONS);
     if (!prefs.questNoteEnabled) return;
-    return new QuestNoteApp(questId).render(true);
+    return new QuestNoteApp(questId, noteOptions).render(true);
   }
 
   async _prepareContext(options) {
-    const ctx = await super._prepareContext(options);
-    const quest = this.quest;
+    const ctx   = await super._prepareContext(options);
+    const quest  = this.quest;
     const themeId = game.settings.get(MODULE_ID, SETTINGS.THEME);
-    const theme = getTheme(themeId);
+    const theme  = getTheme(themeId);
+
+    const { type = 'quest', status, objectiveText } = this._noteOptions;
+
+    const STATUS_LABELS = {
+      available: 'QUESTTRACKER.QuestNote.NewQuestAvailable',
+      active:    'QUESTTRACKER.QuestNote.QuestAccepted',
+      completed: 'QUESTTRACKER.QuestNote.QuestCompleted',
+      failed:    'QUESTTRACKER.QuestNote.QuestFailed',
+    };
+
+    const isObjectiveNote = type === 'objective' || type === 'objectiveNew';
+    const noteLabel = type === 'objective'
+      ? game.i18n.localize('QUESTTRACKER.QuestNote.ObjectiveCompleted')
+      : type === 'objectiveNew'
+        ? game.i18n.localize('QUESTTRACKER.QuestNote.NewObjective')
+        : game.i18n.localize(STATUS_LABELS[status] ?? 'QUESTTRACKER.QuestNote.NewQuest');
 
     return {
       ...ctx,
       quest,
       themeId,
-      noteStyle: theme?.noteStyle ?? 'scroll',
-      objectives: (quest?.objectives ?? []).filter(o => o.text),
+      noteStyle:     theme?.noteStyle ?? 'scroll',
+      noteType:      type,
+      isObjectiveNote,
+      noteLabel,
+      objectiveText,
+      objectives:    !isObjectiveNote
+        ? (quest?.objectives ?? []).filter(o => o.text && !o.hidden)
+        : [],
     };
   }
 

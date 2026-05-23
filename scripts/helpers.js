@@ -1,4 +1,5 @@
 import { MODULE_ID } from './constants.js';
+import { SqtConfirmDialog } from './apps/confirm-dialog.js';
 
 /** Register Handlebars helpers used by SQT templates. */
 export function registerHandlebarsHelpers() {
@@ -41,6 +42,7 @@ export async function preloadTemplates() {
     `${base}/quest-note.hbs`,
     `${base}/system-config.hbs`,
     `${base}/reward-dialog.hbs`,
+    `${base}/confirm-dialog.hbs`,
   ]);
 }
 
@@ -74,7 +76,7 @@ export function formatCurrency(amount, label) {
  * @returns {Promise<boolean>}
  */
 export function confirmDialog(title, content) {
-  return Dialog.confirm({ title, content, defaultYes: false });
+  return SqtConfirmDialog.confirm(title, content);
 }
 
 /** Truncate a string to maxLen characters. */

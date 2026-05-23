@@ -27,12 +27,6 @@
         {{/each}}
       {{/if}}
 
-      {{#if hasRewardItems}}
-        <div class="sqt-reward-chip">
-          <i class="fas fa-sack"></i>
-          {{quest.rewards.items.length}} {{localize "QUESTTRACKER.Rewards.Items"}}
-        </div>
-      {{/if}}
     </div>
 
     {{!-- ── Distribution Options ── --}}
@@ -51,12 +45,12 @@
       {{/if}}
     </div>
 
-    {{!-- ── Actor List ── --}}
+    {{!-- ── Actor List (XP + Currency recipients) ── --}}
     <div class="sqt-rewards-actors">
       <div class="sqt-rewards-actors-header">
-        <span>Select recipients:</span>
+        <span>{{localize "QUESTTRACKER.Rewards.SelectRecipients"}}</span>
         <button type="button" data-action="toggleAll" class="sqt-btn sqt-sm">
-          Toggle All
+          {{localize "QUESTTRACKER.Rewards.ToggleAll"}}
         </button>
       </div>
 
@@ -77,6 +71,31 @@
         </ul>
       {{/if}}
     </div>
+
+    {{!-- ── Per-item recipient selection ── --}}
+    {{#if hasRewardItems}}
+      <div class="sqt-item-dist">
+        <div class="sqt-rewards-actors-header">
+          <span>{{localize "QUESTTRACKER.Rewards.ItemDistribution"}}</span>
+        </div>
+        <ul class="sqt-item-dist-list">
+          {{#each rewardItems}}
+            <li class="sqt-item-dist-row">
+              <img src="{{img}}" class="sqt-item-dist-img">
+              <span class="sqt-item-dist-name">
+                {{name}}{{#if (sqt-gt quantity 1)}} ×{{quantity}}{{/if}}
+              </span>
+              <select class="sqt-item-recipient" data-item-uuid="{{uuid}}">
+                <option value="all">{{localize "QUESTTRACKER.Rewards.AllRecipients"}}</option>
+                {{#each ../actors}}
+                  <option value="{{id}}">{{name}}</option>
+                {{/each}}
+              </select>
+            </li>
+          {{/each}}
+        </ul>
+      </div>
+    {{/if}}
 
   {{else}}
     <p class="sqt-hint sqt-warning">{{localize "QUESTTRACKER.Errors.QuestNotFound"}}</p>

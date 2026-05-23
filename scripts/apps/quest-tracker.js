@@ -22,7 +22,7 @@ export class QuestTrackerApp extends HandlebarsApplicationMixin(ApplicationV2) {
       minimizable: true,
       resizable: true,
     },
-    position: { width: 700, height: 600 },
+    position: { width: 1139, height: 695 },
     actions: {
       createQuest:   QuestTrackerApp._onCreateQuest,
       openQuest:     QuestTrackerApp._onOpenQuest,
@@ -103,19 +103,28 @@ export class QuestTrackerApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._activateTabListeners();
     this._applyActiveTab(this._activeTab);
 
-    // Re-render on quest data changes
-    this._hookId_questCreated  = Hooks.on('sqt.questCreated',  () => this.render());
-    this._hookId_questUpdated  = Hooks.on('sqt.questUpdated',  () => this.render());
-    this._hookId_questDeleted  = Hooks.on('sqt.questDeleted',  () => this.render());
-    this._hookId_themeChanged  = Hooks.on('sqt.themeChanged',  (id) => ThemeManager.applyToElement(this.element, id));
+    // Re-render on quest data changes — guard against duplicate registration on re-renders
+    if (!this._hookId_questCreated) {
+      this._hookId_questCreated   = Hooks.on('sqt.questCreated',     () => this.render());
+      this._hookId_questUpdated   = Hooks.on('sqt.questUpdated',     () => this.render());
+      this._hookId_questDeleted   = Hooks.on('sqt.questDeleted',     () => this.render());
+      this._hookId_dataRefresh    = Hooks.on('sqt.questDataRefresh', () => this.render());
+      this._hookId_themeChanged   = Hooks.on('sqt.themeChanged', (id) => ThemeManager.applyToElement(this.element, id));
+    }
   }
 
   _onClose(options) {
     super._onClose(options);
-    Hooks.off('sqt.questCreated', this._hookId_questCreated);
-    Hooks.off('sqt.questUpdated', this._hookId_questUpdated);
-    Hooks.off('sqt.questDeleted', this._hookId_questDeleted);
-    Hooks.off('sqt.themeChanged', this._hookId_themeChanged);
+    Hooks.off('sqt.questCreated',     this._hookId_questCreated);
+    Hooks.off('sqt.questUpdated',     this._hookId_questUpdated);
+    Hooks.off('sqt.questDeleted',     this._hookId_questDeleted);
+    Hooks.off('sqt.questDataRefresh', this._hookId_dataRefresh);
+    Hooks.off('sqt.themeChanged',     this._hookId_themeChanged);
+    this._hookId_questCreated = null;
+    this._hookId_questUpdated = null;
+    this._hookId_questDeleted = null;
+    this._hookId_dataRefresh  = null;
+    this._hookId_themeChanged = null;
     QuestTrackerApp.instance = null;
   }
 
@@ -223,11 +232,11 @@ export class QuestTrackerApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static async _onSendQuestNote(event, target) {
     const id = target.closest('[data-quest-id]')?.dataset.questId;
     if (!id) return;
-    // Emit to all clients (including GM) so everyone sees the note
-    game.socket.emit(`module.${MODULE_ID}`, { type: SOCKET_TYPES.QUEST_NOTE, questId: id });
-    // Show locally as well
+    const quest      = QuestStore.get(id);
+    const noteOptions = { type: 'quest', status: quest?.status };
+    game.socket.emit(`module.${MODULE_ID}`, { type: SOCKET_TYPES.QUEST_NOTE, questId: id, noteOptions });
     const { QuestNoteApp } = await import('./quest-note.js');
-    QuestNoteApp.show(id);
+    QuestNoteApp.show(id, noteOptions);
   }
 
   static async _onOpenSettings(event, target) {

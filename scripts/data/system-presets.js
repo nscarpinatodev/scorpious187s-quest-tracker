@@ -63,13 +63,23 @@ export const SYSTEM_PRESETS = {
       await actor.update({ 'system.details.xp.value': current + amount });
     },
     async applyCurrency(actor, currency) {
-      const update = {};
+      const coins = {};
       for (const [key, amount] of Object.entries(currency)) {
         if (!amount) continue;
-        const current = foundry.utils.getProperty(actor, `system.currency.${key}.value`) ?? 0;
-        update[`system.currency.${key}.value`] = current + amount;
+        coins[key] = amount;
       }
-      if (Object.keys(update).length) await actor.update(update);
+      if (!Object.keys(coins).length) return;
+      // PF2e v5+ stores currency as inventory coin items; use addCoins when available.
+      if (typeof actor.inventory?.addCoins === 'function') {
+        await actor.inventory.addCoins(coins);
+      } else {
+        const update = {};
+        for (const [key, amount] of Object.entries(coins)) {
+          const current = foundry.utils.getProperty(actor, `system.currency.${key}.value`) ?? 0;
+          update[`system.currency.${key}.value`] = current + amount;
+        }
+        if (Object.keys(update).length) await actor.update(update);
+      }
     },
   },
 

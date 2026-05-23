@@ -1,7 +1,21 @@
-import { MODULE_ID, SETTINGS } from '../constants.js';
+import { MODULE_ID, SETTINGS, SOCKET_TYPES } from '../constants.js';
 import { SYSTEM_PRESETS, getSystemPreset, getSystemPresetList } from '../data/system-presets.js';
 import { THEME_CATEGORIES } from '../data/theme-presets.js';
 import { ThemeManager } from '../theme-manager.js';
+
+const FONT_OPTIONS = [
+  { value: '',                                                                   label: 'Theme Default' },
+  { value: "'Palatino Linotype', 'Book Antiqua', Palatino, serif",               label: 'Palatino' },
+  { value: "'Georgia', 'Times New Roman', serif",                                label: 'Georgia' },
+  { value: "'Times New Roman', serif",                                           label: 'Times New Roman' },
+  { value: "'Segoe UI', Arial, sans-serif",                                      label: 'Segoe UI' },
+  { value: "'Trebuchet MS', Arial, sans-serif",                                  label: 'Trebuchet MS' },
+  { value: "'Franklin Gothic Medium', 'Arial Narrow Bold', sans-serif",          label: 'Franklin Gothic' },
+  { value: "'Arial Narrow', Arial, sans-serif",                                  label: 'Arial Narrow' },
+  { value: "'Arial Black', Impact, sans-serif",                                  label: 'Arial Black' },
+  { value: "Impact, 'Arial Narrow Bold', sans-serif",                            label: 'Impact' },
+  { value: "'Courier New', 'Lucida Console', monospace",                         label: 'Courier New (Mono)' },
+];
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -19,7 +33,7 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
       minimizable: false,
       resizable: true,
     },
-    position: { width: 680, height: 720 },
+    position: { width: 946, height: 1001 },
     actions: {
       save:             SystemConfigApp._onSave,
       cancel:           SystemConfigApp._onCancel,
@@ -49,6 +63,31 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ? sysConfig.currency
       : currentPreset.currency ?? [];
 
+    const fontHeading = sysConfig.fontHeading ?? '';
+    const fontBody    = sysConfig.fontBody    ?? '';
+
+    // Fonts registered in Foundry's font system (user-added custom fonts + module fonts)
+    const foundryFontOptions = Object.keys(CONFIG.fontDefinitions ?? {})
+      .filter(name => name?.trim())
+      .sort((a, b) => a.localeCompare(b))
+      .map(name => ({ value: `'${name}'`, label: name }));
+
+    const minObjectiveRole = sysConfig.minObjectiveRole ?? 1;
+    const dragPermission   = sysConfig.dragPermission   ?? 'gm';
+
+    const roleOptions = [
+      { value: 1, label: game.i18n.localize('USER.RolePlayer')    || 'Player' },
+      { value: 2, label: game.i18n.localize('USER.RoleTrusted')   || 'Trusted Player' },
+      { value: 3, label: game.i18n.localize('USER.RoleAssistant') || 'Assistant GM' },
+      { value: 4, label: game.i18n.localize('USER.RoleGamemaster')|| 'Game Master' },
+    ];
+
+    const dragPermissionOptions = [
+      { value: 'gm',      label: 'GM Only' },
+      { value: 'trusted', label: 'Trusted Player+' },
+      { value: 'player',  label: 'All Players' },
+    ];
+
     return {
       ...ctx,
       sysConfig,
@@ -56,8 +95,16 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
       customVars,
       notifPrefs,
       currency,
+      fontHeading,
+      fontBody,
+      fontOptions: FONT_OPTIONS,
+      foundryFontOptions,
       systemPresets: getSystemPresetList(),
       themeCategories: THEME_CATEGORIES,
+      minObjectiveRole,
+      dragPermission,
+      roleOptions,
+      dragPermissionOptions,
     };
   }
 
@@ -115,15 +162,19 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     return {
       system: {
-        preset:          el.querySelector('#sqt-system-preset')?.value ?? 'custom',
-        xpEnabled:       el.querySelector('#sqt-xp-enabled')?.checked ?? false,
-        currencyEnabled: el.querySelector('#sqt-currency-enabled')?.checked ?? false,
+        preset:             el.querySelector('#sqt-system-preset')?.value    ?? 'custom',
+        xpEnabled:          el.querySelector('#sqt-xp-enabled')?.checked     ?? false,
+        currencyEnabled:    el.querySelector('#sqt-currency-enabled')?.checked ?? false,
         currency,
+        fontHeading:        el.querySelector('#sqt-font-heading')?.value     ?? '',
+        fontBody:           el.querySelector('#sqt-font-body')?.value        ?? '',
+        minObjectiveRole:   parseInt(el.querySelector('#sqt-min-objective-role')?.value ?? '1', 10),
+        dragPermission:     el.querySelector('#sqt-drag-permission')?.value  ?? 'gm',
       },
       theme:   el.querySelector('#sqt-theme-select')?.value,
       notifs: {
         questNoteEnabled: el.querySelector('#sqt-note-enabled')?.checked ?? true,
-        autoShowTracker:  el.querySelector('#sqt-auto-tracker')?.checked ?? true,
+        autoShowTracker:  el.querySelector('#sqt-auto-tracker')?.checked ?? false,
       },
       customVars: this._gatherCustomVars(),
     };
@@ -145,20 +196,27 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const data = this._gatherFormData();
 
     await game.settings.set(MODULE_ID, SETTINGS.SYSTEM_CONFIG, {
-      preset:          data.system.preset,
-      xpEnabled:       data.system.xpEnabled,
-      currencyEnabled: data.system.currencyEnabled,
-      currency:        data.system.currency,
+      preset:            data.system.preset,
+      xpEnabled:         data.system.xpEnabled,
+      currencyEnabled:   data.system.currencyEnabled,
+      currency:          data.system.currency,
+      fontHeading:       data.system.fontHeading,
+      fontBody:          data.system.fontBody,
+      minObjectiveRole:  data.system.minObjectiveRole,
+      dragPermission:    data.system.dragPermission,
     });
+
+    await game.settings.set(MODULE_ID, SETTINGS.NOTIFICATIONS, data.notifs);
+
+    // Save custom vars before theme so the onChange hook reads the latest custom vars.
+    await game.settings.set(MODULE_ID, SETTINGS.CUSTOM_THEME, data.customVars);
 
     if (data.theme) {
       await game.settings.set(MODULE_ID, SETTINGS.THEME, data.theme);
     }
 
-    await game.settings.set(MODULE_ID, SETTINGS.NOTIFICATIONS, data.notifs);
-    await game.settings.set(MODULE_ID, SETTINGS.CUSTOM_THEME, data.customVars);
-
     ThemeManager.apply(data.theme);
+
     ui.notifications.info(game.i18n.localize('QUESTTRACKER.Settings.Saved'));
     this.close();
   }

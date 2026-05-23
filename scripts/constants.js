@@ -38,6 +38,8 @@ export const SOCKET_TYPES = Object.freeze({
   QUEST_UPDATED:  'questUpdated',
   QUEST_DELETED:  'questDeleted',
   REFRESH:        'refresh',
+  SYNC_THEME:     'syncTheme',
+  PLAYER_UPDATE:  'playerUpdate',
 });
 
 export const SETTINGS = Object.freeze({

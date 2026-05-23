@@ -1,4 +1,4 @@
-import { MODULE_ID, QUEST_STATUS, DROP_TYPES, SETTINGS, DEFAULT_QUEST_IMG } from '../constants.js';
+import { MODULE_ID, QUEST_STATUS, DROP_TYPES, SETTINGS, SOCKET_TYPES, DEFAULT_QUEST_IMG } from '../constants.js';
 import { QuestStore } from '../data/quest-store.js';
 import { ThemeManager } from '../theme-manager.js';
 import { getSystemPreset } from '../data/system-presets.js';
@@ -20,13 +20,15 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       minimizable: true,
       resizable: true,
     },
-    position: { width: 680, height: 740 },
+    position: { width: 946, height: 1030 },
     actions: {
       saveQuest:        QuestSheetApp._onSave,
       cancel:           QuestSheetApp._onCancel,
-      addObjective:     QuestSheetApp._onAddObjective,
-      removeObjective:  QuestSheetApp._onRemoveObjective,
-      toggleObjective:  QuestSheetApp._onToggleObjective,
+      deleteQuest:      QuestSheetApp._onDeleteQuest,
+      addObjective:          QuestSheetApp._onAddObjective,
+      removeObjective:       QuestSheetApp._onRemoveObjective,
+      toggleObjective:       QuestSheetApp._onToggleObjective,
+      toggleObjectiveHidden: QuestSheetApp._onToggleObjectiveHidden,
       removeQuestgiver: QuestSheetApp._onRemoveQuestgiver,
       removeLocation:   QuestSheetApp._onRemoveLocation,
       removeJournal:    QuestSheetApp._onRemoveJournal,
@@ -45,12 +47,15 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /** @param {string} questId */
   constructor(questId, options = {}) {
-    super(options);
+    super({ ...options, id: `sqt-sheet-${questId}` });
     this.questId = questId;
-    this.id = `sqt-sheet-${questId}`;
   }
 
   get quest() { return QuestStore.get(this.questId); }
+
+  get title() {
+    return this.quest?.name ?? game.i18n.localize('QUESTTRACKER.Quest.Name');
+  }
 
   // ── Lifecycle ────────────────────────────────────────────────────────────
 
@@ -63,6 +68,32 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const preset    = getSystemPreset(sysConfig.preset);
     const currency  = sysConfig.currency?.length ? sysConfig.currency : (preset.currency ?? []);
 
+    const minObjectiveRole = sysConfig.minObjectiveRole ?? 1;
+    const canToggleObjective = game.user.isGM || game.user.role >= minObjectiveRole;
+
+    const dragPermission = sysConfig.dragPermission ?? 'gm';
+    const canDrop = game.user.isGM
+      || dragPermission === 'player'
+      || (dragPermission === 'trusted' && game.user.role >= CONST.USER_ROLES.TRUSTED);
+
+    // Resolve journal entries and enrich their text pages for inline display
+    const journalContent = [];
+    for (const entry of quest.journalEntries ?? []) {
+      const doc = await fromUuid(entry.uuid).catch(() => null);
+      if (!doc) continue;
+      const pages = doc.pages?.contents ?? [];
+      const enrichedPages = [];
+      for (const page of pages) {
+        if (page.type === 'text') {
+          const html = await TextEditor.enrichHTML(page.text?.content ?? '', { async: true });
+          enrichedPages.push({ name: page.name, content: html });
+        }
+      }
+      if (enrichedPages.length) {
+        journalContent.push({ uuid: entry.uuid, name: entry.name, pages: enrichedPages });
+      }
+    }
+
     return {
       ...ctx,
       quest,
@@ -73,9 +104,12 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
         label: game.i18n.localize(`QUESTTRACKER.Status.${s}`),
         selected: quest.status === s,
       })),
-      xpEnabled:       sysConfig.xpEnabled ?? preset.xpEnabled,
-      currencyEnabled: sysConfig.currencyEnabled ?? preset.currencyEnabled,
+      xpEnabled:          sysConfig.xpEnabled ?? preset.xpEnabled,
+      currencyEnabled:    sysConfig.currencyEnabled ?? preset.currencyEnabled,
       currency,
+      canToggleObjective,
+      canDrop,
+      journalContent,
     };
   }
 
@@ -83,50 +117,121 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
     super._onRender(context, options);
     ThemeManager.applyToElement(this.element, context.themeId);
 
-    const el = this.element;
+    // Update window title bar to reflect the actual quest name (frame doesn't re-render on updates)
+    const titleEl = this.element.querySelector('.window-title');
+    if (titleEl) titleEl.textContent = this.title;
 
-    // Drag-over / drop
-    el.addEventListener('dragover', this._onDragOver.bind(this));
-    el.addEventListener('drop',     this._onDrop.bind(this));
+    // All listeners go on the persistent outer element — only register once.
+    // Re-renders replace inner template content but this.element stays the same,
+    // so these listeners survive re-renders without needing to be re-added.
+    if (!this._hookId) {
+      const el = this.element;
 
-    // Auto-save on input changes (debounced)
-    el.addEventListener('input',  foundry.utils.debounce(this._autoSave.bind(this), 600));
-    el.addEventListener('change', foundry.utils.debounce(this._autoSave.bind(this), 200));
+      el.addEventListener('dragover', this._onDragOver.bind(this));
+      el.addEventListener('drop',     this._onDrop.bind(this));
+      el.addEventListener('dblclick', this._onDblClick.bind(this));
+      el.addEventListener('input',  foundry.utils.debounce(this._autoSave.bind(this), 600));
+      el.addEventListener('change', foundry.utils.debounce(this._autoSave.bind(this), 200));
 
-    // Rich-text editors
-    this._activateEditors();
-
-    // Re-render on external changes to this quest
-    this._hookId = Hooks.on('sqt.questUpdated', (updated) => {
-      if (updated.id === this.questId) this.render();
-    });
+      // Only re-render for external quest changes, not our own auto-saves.
+      this._hookId = Hooks.on('sqt.questUpdated', (updated) => {
+        if (updated.id === this.questId && !this._saving) this.render();
+      });
+      // Fires on ALL clients (via settings onChange) — handles player-side updates.
+      this._hookId_dataRefresh  = Hooks.on('sqt.questDataRefresh', () => {
+        if (!this._saving) this.render();
+      });
+      this._hookId_themeChanged = Hooks.on('sqt.themeChanged', (id) => ThemeManager.applyToElement(this.element, id));
+    }
   }
 
   _onClose(options) {
     super._onClose(options);
-    Hooks.off('sqt.questUpdated', this._hookId);
+    Hooks.off('sqt.questUpdated',     this._hookId);
+    Hooks.off('sqt.questDataRefresh', this._hookId_dataRefresh);
+    Hooks.off('sqt.themeChanged',     this._hookId_themeChanged);
+    this._hookId = null;
+    this._hookId_dataRefresh  = null;
+    this._hookId_themeChanged = null;
+  }
+
+  // ── Permission helpers ───────────────────────────────────────────────────
+
+  _canDrop() {
+    if (game.user.isGM) return true;
+    const sysConfig = game.settings.get(MODULE_ID, SETTINGS.SYSTEM_CONFIG);
+    const perm = sysConfig.dragPermission ?? 'gm';
+    if (perm === 'player')  return true;
+    if (perm === 'trusted') return game.user.role >= CONST.USER_ROLES.TRUSTED;
+    return false;
+  }
+
+  // ── Double-click interactions ────────────────────────────────────────────
+
+  async _onDblClick(event) {
+    const questgiverEl = event.target.closest('.sqt-questgiver-zone .sqt-linked-entity');
+    const locationEl   = event.target.closest('.sqt-location-zone .sqt-linked-entity');
+
+    if (questgiverEl) {
+      const uuid = this.quest?.questgiver?.uuid;
+      if (!uuid) return;
+      const actor = await fromUuid(uuid).catch(() => null);
+      if (!actor) return;
+      if (game.user.isGM) {
+        actor.sheet?.render(true);
+      } else {
+        new ImagePopout(actor.img, { title: actor.name }).render(true);
+      }
+      return;
+    }
+
+    if (locationEl && game.user.isGM) {
+      const uuid = this.quest?.location?.uuid;
+      if (!uuid) return;
+      const scene = await fromUuid(uuid).catch(() => null);
+      if (scene) scene.view();
+    }
   }
 
   // ── Auto-save ────────────────────────────────────────────────────────────
 
   async _autoSave() {
+    if (!game.user.isGM) return; // World settings are GM-only; non-GMs use sockets
     const form = this.element.querySelector('form.sqt-sheet-form');
     if (!form) return;
     const data = this._getFormData(form);
-    await QuestStore.update(this.questId, data);
+    const prevStatus = this.quest?.status;
+    this._saving = true;
+    try {
+      await QuestStore.update(this.questId, data);
+    } finally {
+      this._saving = false;
+    }
+    if (game.user.isGM &&
+        data.status === QUEST_STATUS.COMPLETED &&
+        prevStatus !== QUEST_STATUS.COMPLETED) {
+      const { RewardDialog } = await import('./reward-dialog.js');
+      new RewardDialog(this.questId).render(true);
+    }
   }
 
   _getFormData(form) {
     const fd = new FormDataExtended(form);
     const obj = fd.object;
 
-    // Objectives come from the DOM
-    const objectives = [];
-    form.querySelectorAll('.sqt-objective-row').forEach(row => {
-      const id    = row.dataset.objectiveId;
-      const text  = row.querySelector('.sqt-obj-text')?.value ?? '';
-      const done  = row.querySelector('.sqt-obj-check')?.checked ?? false;
-      if (id) objectives.push({ id, text, completed: done });
+    // Build objectives from stored data, updating only what is present in the DOM.
+    // Hidden objectives are not rendered for players — we preserve them from the store.
+    // Players without toggle-permission don't get a checkbox — we preserve their completed state.
+    const objectives = (this.quest?.objectives ?? []).map(o => {
+      const row    = form.querySelector(`.sqt-objective-row[data-objective-id="${o.id}"]`);
+      if (!row) return o; // Not in DOM (hidden from this user) — keep as-is
+      const textEl = row.querySelector('.sqt-obj-text');
+      const doneEl = row.querySelector('.sqt-obj-check');
+      return {
+        ...o,
+        text:      textEl  ? textEl.value      : o.text,
+        completed: doneEl  ? doneEl.checked     : o.completed,
+      };
     });
 
     // Currency
@@ -135,39 +240,38 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       currency[input.dataset.key] = Number(input.value) || 0;
     });
 
+    // name and status live in the sheet header outside the <form>, so read them directly.
+    const nameEl   = this.element.querySelector('input[name="name"]');
+    const statusEl = this.element.querySelector('select[name="status"]');
+
+    // Reward items — preserve all fields, just update quantity from the input
+    const currentItems = this.quest.rewards?.items ?? [];
+    const items = [];
+    form.querySelectorAll('.sqt-item-row[data-item-uuid]').forEach(row => {
+      const uuid = row.dataset.itemUuid;
+      const existing = currentItems.find(i => i.uuid === uuid);
+      if (existing) {
+        const qty = Number(row.querySelector('.sqt-item-qty')?.value) || 1;
+        items.push({ ...existing, quantity: qty });
+      }
+    });
+
     return {
-      name:        obj.name      ?? this.quest.name,
-      status:      obj.status    ?? this.quest.status,
+      name:        nameEl?.value   ?? this.quest.name,
+      status:      statusEl?.value ?? this.quest.status,
       description: obj.description ?? this.quest.description,
       notes:       obj.notes     ?? this.quest.notes,
       objectives,
       'rewards.xp':       Number(obj['rewards.xp'])  || 0,
       'rewards.currency': currency,
+      'rewards.items':    items,
     };
-  }
-
-  // ── Rich-text editors ────────────────────────────────────────────────────
-
-  _activateEditors() {
-    this.element.querySelectorAll('[data-edit]').forEach(el => {
-      const field = el.dataset.edit;
-      const content = foundry.utils.getProperty(this.quest, field) ?? '';
-      // Use ProseMirror/TinyMCE via Foundry's TextEditor.create if available
-      if (typeof TextEditor?.create === 'function') {
-        TextEditor.create({
-          target: el,
-          content,
-          save_onsavecallback: async (html) => {
-            await QuestStore.update(this.questId, { [field]: html });
-          },
-        });
-      }
-    });
   }
 
   // ── Drag & Drop ──────────────────────────────────────────────────────────
 
   _onDragOver(event) {
+    if (!this._canDrop()) return;
     const zone = event.target.closest('[data-drop-zone]');
     if (!zone) return;
     event.preventDefault();
@@ -178,6 +282,7 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async _onDrop(event) {
     // Remove hover state
     this.element.querySelectorAll('.sqt-drop-hover').forEach(el => el.classList.remove('sqt-drop-hover'));
+    if (!this._canDrop()) return;
 
     const zone = event.target.closest('[data-drop-zone]');
     if (!zone) return;
@@ -276,7 +381,7 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static async _onAddObjective(event, target) {
     const quest = this.quest;
     const objectives = [...(quest.objectives ?? [])];
-    objectives.push({ id: foundry.utils.randomID(), text: '', completed: false });
+    objectives.push({ id: foundry.utils.randomID(), text: '', completed: false, hidden: true });
     await QuestStore.update(this.questId, { objectives });
     this.render();
   }
@@ -289,14 +394,40 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this.render();
   }
 
+  static async _onToggleObjectiveHidden(event, target) {
+    const id = target.closest('[data-objective-id]')?.dataset.objectiveId;
+    if (!id) return;
+    const objectives = (this.quest.objectives ?? []).map(o =>
+      o.id === id ? { ...o, hidden: !o.hidden } : o
+    );
+    await QuestStore.update(this.questId, { objectives });
+    this.render();
+  }
+
   static async _onToggleObjective(event, target) {
+    const sysConfig = game.settings.get(MODULE_ID, SETTINGS.SYSTEM_CONFIG);
+    const minRole = sysConfig.minObjectiveRole ?? 1;
+    if (!game.user.isGM && game.user.role < minRole) {
+      target.checked = !target.checked; // revert visual change
+      return;
+    }
     const id = target.closest('[data-objective-id]')?.dataset.objectiveId;
     if (!id) return;
     const objectives = (this.quest.objectives ?? []).map(o =>
       o.id === id ? { ...o, completed: !o.completed } : o
     );
-    await QuestStore.update(this.questId, { objectives });
-    // Don't full re-render — just update the visual state
+    if (game.user.isGM) {
+      await QuestStore.update(this.questId, { objectives });
+    } else {
+      // Non-GMs cannot write world settings directly — ask the GM to save it
+      game.socket.emit(`module.${MODULE_ID}`, {
+        type:    SOCKET_TYPES.PLAYER_UPDATE,
+        questId: this.questId,
+        updates: { objectives },
+        userId:  game.user.id,
+      });
+    }
+    // Optimistic visual update — the GM's save will confirm via questDataRefresh
     const row = target.closest('[data-objective-id]');
     if (row) row.classList.toggle('completed', objectives.find(o => o.id === id)?.completed);
   }
@@ -345,5 +476,18 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       },
     });
     fp.render(true);
+  }
+
+  static async _onDeleteQuest(event, target) {
+    const quest = this.quest;
+    if (!quest) return;
+    const confirmed = await confirmDialog(
+      game.i18n.localize('QUESTTRACKER.Confirm.DeleteQuest'),
+      game.i18n.format('QUESTTRACKER.Confirm.DeleteQuestMessage', { name: quest.name }),
+    );
+    if (confirmed) {
+      await QuestStore.delete(this.questId);
+      this.close();
+    }
   }
 }

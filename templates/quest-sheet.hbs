@@ -44,50 +44,6 @@
   <form class="sqt-sheet-form" autocomplete="off">
     <div class="sqt-sheet-body">
 
-      {{!-- ── Description ── --}}
-      <section class="sqt-section">
-        <h2 class="sqt-section-title">
-          <i class="fas fa-align-left"></i> {{localize "QUESTTRACKER.Quest.Description"}}
-        </h2>
-        {{#if isGM}}
-          <div class="sqt-editor" data-edit="description">{{{quest.description}}}</div>
-        {{else}}
-          <div class="sqt-prose">{{{quest.description}}}</div>
-        {{/if}}
-      </section>
-
-      {{!-- ── Objectives ── --}}
-      <section class="sqt-section">
-        <h2 class="sqt-section-title">
-          <i class="fas fa-tasks"></i> {{localize "QUESTTRACKER.Quest.Objectives"}}
-          {{#if isGM}}
-            <button type="button" data-action="addObjective" class="sqt-icon-btn sqt-sm sqt-inline">
-              <i class="fas fa-plus"></i>
-            </button>
-          {{/if}}
-        </h2>
-        <ul class="sqt-objectives">
-          {{#each quest.objectives}}
-            <li class="sqt-objective-row {{#if completed}}completed{{/if}}" data-objective-id="{{id}}">
-              <input type="checkbox" class="sqt-obj-check" {{#if completed}}checked{{/if}}
-                     data-action="toggleObjective" title="Toggle">
-              {{#if ../isGM}}
-                <input type="text" class="sqt-obj-text" value="{{text}}" placeholder="Objective text…">
-                <button type="button" data-action="removeObjective" class="sqt-icon-btn sqt-sm sqt-danger sqt-inline">
-                  <i class="fas fa-times"></i>
-                </button>
-              {{else}}
-                <span class="sqt-obj-label">{{text}}</span>
-              {{/if}}
-            </li>
-          {{else}}
-            <li class="sqt-objectives-empty">
-              {{#if isGM}}Click + to add objectives.{{else}}No objectives listed.{{/if}}
-            </li>
-          {{/each}}
-        </ul>
-      </section>
-
       {{!-- ── Questgiver ── --}}
       <section class="sqt-section sqt-two-col">
         <div class="sqt-section-col">
@@ -107,10 +63,12 @@
                 {{/if}}
               </div>
             {{else}}
+              {{#if canDrop}}
               <div class="sqt-drop-hint">
                 <i class="fas fa-user-plus"></i>
                 <span>{{localize "QUESTTRACKER.Quest.QuestgiverHint"}}</span>
               </div>
+              {{/if}}
             {{/if}}
           </div>
         </div>
@@ -137,13 +95,74 @@
                 {{/if}}
               </div>
             {{else}}
+              {{#if canDrop}}
               <div class="sqt-drop-hint">
                 <i class="fas fa-map-pin"></i>
                 <span>{{localize "QUESTTRACKER.Quest.LocationHint"}}</span>
               </div>
+              {{/if}}
             {{/if}}
           </div>
         </div>
+      </section>
+
+      {{!-- ── Description ── --}}
+      <section class="sqt-section">
+        <h2 class="sqt-section-title">
+          <i class="fas fa-align-left"></i> {{localize "QUESTTRACKER.Quest.Description"}}
+        </h2>
+        {{#if isGM}}
+          <textarea name="description" class="sqt-description-editor"
+                    placeholder="Quest description…">{{quest.description}}</textarea>
+        {{else}}
+          <div class="sqt-prose">{{{quest.description}}}</div>
+        {{/if}}
+      </section>
+
+      {{!-- ── Objectives ── --}}
+      <section class="sqt-section">
+        <h2 class="sqt-section-title">
+          <i class="fas fa-tasks"></i> {{localize "QUESTTRACKER.Quest.Objectives"}}
+          {{#if isGM}}
+            <button type="button" data-action="addObjective" class="sqt-icon-btn sqt-sm sqt-inline">
+              <i class="fas fa-plus"></i>
+            </button>
+          {{/if}}
+        </h2>
+        <ul class="sqt-objectives">
+          {{#each quest.objectives}}
+            {{#if (sqt-or ../isGM (sqt-not hidden))}}
+              <li class="sqt-objective-row {{#if completed}}completed{{/if}} {{#if hidden}}sqt-obj-hidden{{/if}}"
+                  data-objective-id="{{id}}">
+                {{#if ../canToggleObjective}}
+                  <input type="checkbox" class="sqt-obj-check" {{#if completed}}checked{{/if}}
+                         data-action="toggleObjective" title="Toggle completion">
+                {{else}}
+                  <span class="sqt-obj-done-icon {{#if completed}}is-done{{/if}}">
+                    {{#if completed}}<i class="fas fa-check-circle"></i>{{/if}}
+                  </span>
+                {{/if}}
+                {{#if ../isGM}}
+                  <input type="text" class="sqt-obj-text" value="{{text}}" placeholder="Objective text…">
+                  <button type="button" data-action="toggleObjectiveHidden"
+                          class="sqt-icon-btn sqt-sm sqt-inline {{#if hidden}}sqt-active{{/if}}"
+                          title="{{#if hidden}}Show to players{{else}}Hide from players{{/if}}">
+                    <i class="fas fa-{{#if hidden}}eye-slash{{else}}eye{{/if}}"></i>
+                  </button>
+                  <button type="button" data-action="removeObjective" class="sqt-icon-btn sqt-sm sqt-danger sqt-inline">
+                    <i class="fas fa-times"></i>
+                  </button>
+                {{else}}
+                  <span class="sqt-obj-label">{{text}}</span>
+                {{/if}}
+              </li>
+            {{/if}}
+          {{else}}
+            <li class="sqt-objectives-empty">
+              {{#if isGM}}Click + to add objectives.{{else}}No objectives listed.{{/if}}
+            </li>
+          {{/each}}
+        </ul>
       </section>
 
       {{!-- ── Journal Entries ── --}}
@@ -174,12 +193,26 @@
               {{/each}}
             </ul>
           {{else}}
+            {{#if canDrop}}
             <div class="sqt-drop-hint">
               <i class="fas fa-book-medical"></i>
               <span>{{localize "QUESTTRACKER.Quest.JournalHint"}}</span>
             </div>
+            {{/if}}
           {{/if}}
         </div>
+
+        {{!-- Inline journal content --}}
+        {{#each journalContent}}
+          <details class="sqt-journal-inline" open>
+            <summary class="sqt-journal-inline-title">
+              <i class="fas fa-book"></i> {{name}}
+            </summary>
+            {{#each pages}}
+              <div class="sqt-journal-page-content">{{{content}}}</div>
+            {{/each}}
+          </details>
+        {{/each}}
       </section>
 
       {{!-- ── Rewards ── --}}
@@ -268,6 +301,9 @@
     {{!-- Footer Buttons --}}
     {{#if isGM}}
       <footer class="sqt-sheet-footer">
+        <button type="button" data-action="deleteQuest" class="sqt-btn sqt-danger-btn">
+          <i class="fas fa-trash"></i> {{localize "QUESTTRACKER.Delete"}}
+        </button>
         <button type="button" data-action="saveQuest" class="sqt-btn sqt-primary">
           <i class="fas fa-save"></i> {{localize "QUESTTRACKER.Save"}}
         </button>

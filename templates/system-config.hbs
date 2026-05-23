@@ -1,12 +1,5 @@
 <div class="sqt-window sqt-config" data-sqt-theme="{{themeId}}">
 
-  <header class="sqt-header">
-    <div class="sqt-header-brand">
-      <i class="fas fa-cog sqt-header-icon"></i>
-      <h1 class="sqt-header-title">{{localize "QUESTTRACKER.Settings.Title"}}</h1>
-    </div>
-  </header>
-
   <div class="sqt-config-body">
 
     {{!-- ════ SYSTEM SECTION ════ --}}
@@ -33,24 +26,20 @@
         </div>
       </div>
 
-      <div class="sqt-form-row">
-        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.System.XPEnabled"}}</label>
-        <div class="sqt-form-control sqt-toggle-row">
-          <input type="checkbox" id="sqt-xp-enabled" {{#if sysConfig.xpEnabled}}checked{{/if}}>
-          <label for="sqt-xp-enabled" class="sqt-toggle-label">
-            {{localize "QUESTTRACKER.Settings.System.XPEnabledHint"}}
-          </label>
-        </div>
-      </div>
+      <div class="sqt-toggle-grid">
+        <label for="sqt-xp-enabled" class="sqt-checkbox-label">
+          {{localize "QUESTTRACKER.Settings.System.XPEnabled"}}
+          <span class="sqt-hint">{{localize "QUESTTRACKER.Settings.System.XPEnabledHint"}}</span>
+        </label>
+        <input type="checkbox" id="sqt-xp-enabled" class="sqt-checkbox"
+               {{#if sysConfig.xpEnabled}}checked{{/if}}>
 
-      <div class="sqt-form-row">
-        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.System.CurrencyEnabled"}}</label>
-        <div class="sqt-form-control sqt-toggle-row">
-          <input type="checkbox" id="sqt-currency-enabled" {{#if sysConfig.currencyEnabled}}checked{{/if}}>
-          <label for="sqt-currency-enabled" class="sqt-toggle-label">
-            {{localize "QUESTTRACKER.Settings.System.CurrencyEnabledHint"}}
-          </label>
-        </div>
+        <label for="sqt-currency-enabled" class="sqt-checkbox-label">
+          {{localize "QUESTTRACKER.Settings.System.CurrencyEnabled"}}
+          <span class="sqt-hint">{{localize "QUESTTRACKER.Settings.System.CurrencyEnabledHint"}}</span>
+        </label>
+        <input type="checkbox" id="sqt-currency-enabled" class="sqt-checkbox"
+               {{#if sysConfig.currencyEnabled}}checked{{/if}}>
       </div>
 
       {{!-- Currency Types --}}
@@ -80,6 +69,34 @@
           <i class="fas fa-plus"></i> {{localize "QUESTTRACKER.Settings.System.AddCurrency"}}
         </button>
       </div>
+
+      <div class="sqt-form-row">
+        <label for="sqt-min-objective-role" class="sqt-form-label">
+          {{localize "QUESTTRACKER.Settings.System.MinObjectiveRole"}}
+          <span class="sqt-hint">{{localize "QUESTTRACKER.Settings.System.MinObjectiveRoleHint"}}</span>
+        </label>
+        <div class="sqt-form-control">
+          <select id="sqt-min-objective-role" name="minObjectiveRole">
+            {{#each roleOptions}}
+              <option value="{{value}}" {{#if (sqt-eq ../minObjectiveRole value)}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
+
+      <div class="sqt-form-row">
+        <label for="sqt-drag-permission" class="sqt-form-label">
+          {{localize "QUESTTRACKER.Settings.System.DragPermission"}}
+          <span class="sqt-hint">{{localize "QUESTTRACKER.Settings.System.DragPermissionHint"}}</span>
+        </label>
+        <div class="sqt-form-control">
+          <select id="sqt-drag-permission" name="dragPermission">
+            {{#each dragPermissionOptions}}
+              <option value="{{value}}" {{#if (sqt-eq ../dragPermission value)}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+      </div>
     </section>
 
     {{!-- ════ THEME SECTION ════ --}}
@@ -108,6 +125,50 @@
           <button type="button" data-action="previewTheme" class="sqt-btn sqt-sm">
             <i class="fas fa-eye"></i> Preview
           </button>
+        </div>
+      </div>
+
+      <div class="sqt-form-row">
+        <label for="sqt-font-heading" class="sqt-form-label">Heading Font</label>
+        <div class="sqt-form-control">
+          <select id="sqt-font-heading">
+            <optgroup label="System Fonts">
+              {{#each fontOptions}}
+                <option value="{{value}}" {{#if (sqt-eq ../fontHeading value)}}selected{{/if}}
+                        style="font-family: {{value}}">{{label}}</option>
+              {{/each}}
+            </optgroup>
+            {{#if foundryFontOptions.length}}
+              <optgroup label="Foundry Fonts">
+                {{#each foundryFontOptions}}
+                  <option value="{{value}}" {{#if (sqt-eq ../fontHeading value)}}selected{{/if}}
+                          style="font-family: {{value}}">{{label}}</option>
+                {{/each}}
+              </optgroup>
+            {{/if}}
+          </select>
+        </div>
+      </div>
+
+      <div class="sqt-form-row">
+        <label for="sqt-font-body" class="sqt-form-label">Body Font</label>
+        <div class="sqt-form-control">
+          <select id="sqt-font-body">
+            <optgroup label="System Fonts">
+              {{#each fontOptions}}
+                <option value="{{value}}" {{#if (sqt-eq ../fontBody value)}}selected{{/if}}
+                        style="font-family: {{value}}">{{label}}</option>
+              {{/each}}
+            </optgroup>
+            {{#if foundryFontOptions.length}}
+              <optgroup label="Foundry Fonts">
+                {{#each foundryFontOptions}}
+                  <option value="{{value}}" {{#if (sqt-eq ../fontBody value)}}selected{{/if}}
+                          style="font-family: {{value}}">{{label}}</option>
+                {{/each}}
+              </optgroup>
+            {{/if}}
+          </select>
         </div>
       </div>
 
@@ -145,16 +206,6 @@
                    value="{{lookup customVars '--sqt-border'}}">
             <input type="text"  class="sqt-custom-var-hex" placeholder="#4a4a4a">
           </div>
-          <div class="sqt-custom-var-row sqt-full-width">
-            <label>Heading Font</label>
-            <input type="text" class="sqt-custom-var" data-var="--sqt-font-heading"
-                   value="{{lookup customVars '--sqt-font-heading'}}" placeholder="'Palatino Linotype', serif">
-          </div>
-          <div class="sqt-custom-var-row sqt-full-width">
-            <label>Body Font</label>
-            <input type="text" class="sqt-custom-var" data-var="--sqt-font-body"
-                   value="{{lookup customVars '--sqt-font-body'}}" placeholder="'Georgia', serif">
-          </div>
         </div>
       </details>
     </section>
@@ -166,26 +217,20 @@
         {{localize "QUESTTRACKER.Settings.Notifications.Title"}}
       </h2>
 
-      <div class="sqt-form-row">
-        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.Notifications.QuestNoteEnabled"}}</label>
-        <div class="sqt-form-control sqt-toggle-row">
-          <input type="checkbox" id="sqt-note-enabled"
-                 {{#if notifPrefs.questNoteEnabled}}checked{{/if}}>
-          <label for="sqt-note-enabled" class="sqt-toggle-label">
-            {{localize "QUESTTRACKER.Settings.Notifications.QuestNoteEnabledHint"}}
-          </label>
-        </div>
-      </div>
+      <div class="sqt-toggle-grid">
+        <label for="sqt-note-enabled" class="sqt-checkbox-label">
+          {{localize "QUESTTRACKER.Settings.Notifications.QuestNoteEnabled"}}
+          <span class="sqt-hint">{{localize "QUESTTRACKER.Settings.Notifications.QuestNoteEnabledHint"}}</span>
+        </label>
+        <input type="checkbox" id="sqt-note-enabled" class="sqt-checkbox"
+               {{#if notifPrefs.questNoteEnabled}}checked{{/if}}>
 
-      <div class="sqt-form-row">
-        <label class="sqt-form-label">{{localize "QUESTTRACKER.Settings.Notifications.AutoShowActive"}}</label>
-        <div class="sqt-form-control sqt-toggle-row">
-          <input type="checkbox" id="sqt-auto-tracker"
-                 {{#if notifPrefs.autoShowTracker}}checked{{/if}}>
-          <label for="sqt-auto-tracker" class="sqt-toggle-label">
-            {{localize "QUESTTRACKER.Settings.Notifications.AutoShowActiveHint"}}
-          </label>
-        </div>
+        <label for="sqt-auto-tracker" class="sqt-checkbox-label">
+          {{localize "QUESTTRACKER.Settings.Notifications.AutoShowActive"}}
+          <span class="sqt-hint">{{localize "QUESTTRACKER.Settings.Notifications.AutoShowActiveHint"}}</span>
+        </label>
+        <input type="checkbox" id="sqt-auto-tracker" class="sqt-checkbox"
+               {{#if notifPrefs.autoShowTracker}}checked{{/if}}>
       </div>
     </section>
 

@@ -24,9 +24,10 @@ export class RewardDialog extends HandlebarsApplicationMixin(ApplicationV2) {
     },
     position: { width: 520, height: 'auto' },
     actions: {
-      applyRewards: RewardDialog._onApply,
-      cancel:       RewardDialog._onCancel,
-      toggleAll:    RewardDialog._onToggleAll,
+      applyRewards:    RewardDialog._onApply,
+      cancel:          RewardDialog._onCancel,
+      toggleAll:       RewardDialog._onToggleAll,
+      sendToLootRoller: RewardDialog._onSendToLootRoller,
     },
   };
 
@@ -74,6 +75,9 @@ export class RewardDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       quantity: i.quantity ?? 1,
     }));
 
+    const lootRollerActive = !!(game.modules.get('loot-roller')?.active)
+      && typeof window.LootRoller?.startLottery === 'function';
+
     return {
       ...ctx,
       quest,
@@ -82,9 +86,10 @@ export class RewardDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       currencyEnabled,
       rewardCurrency,
       rewardItems,
-      hasRewardItems:  rewardItems.length > 0,
-      xp:              quest?.rewards?.xp ?? 0,
-      noActors:        actors.length === 0,
+      hasRewardItems:   rewardItems.length > 0,
+      xp:               quest?.rewards?.xp ?? 0,
+      noActors:         actors.length === 0,
+      lootRollerActive,
     };
   }
 
@@ -231,6 +236,56 @@ export class RewardDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       speaker: { alias: game.i18n.localize('QUESTTRACKER.Title') },
       flags: { [MODULE_ID]: { type: 'rewardSummary' } },
     });
+  }
+
+  /**
+   * Apply XP immediately via Quest Tracker, then hand items + coins off to
+   * Loot Roller's LotterySetupApp for the roll-off distribution flow.
+   */
+  static async _onSendToLootRoller(event, target) {
+    const quest = QuestStore.get(this.questId);
+    if (!quest) return this.close();
+
+    const sysConfig = game.settings.get(MODULE_ID, SETTINGS.SYSTEM_CONFIG);
+    const preset    = getSystemPreset(sysConfig.preset);
+
+    // ── XP — distribute immediately, same as normal apply ──
+    const checkedIds = new Set();
+    this.element.querySelectorAll('.sqt-actor-check:checked').forEach(cb => checkedIds.add(cb.dataset.actorId));
+    const actors = getPartyActors().filter(a => checkedIds.has(a.id));
+    const xpEach = this.element.querySelector('#sqt-xp-each')?.checked ?? true;
+    const xp     = quest.rewards?.xp ?? 0;
+
+    if (xp > 0 && preset.applyXP && actors.length) {
+      const share = xpEach ? xp : Math.floor(xp / actors.length);
+      if (share > 0) {
+        for (const actor of actors) {
+          await preset.applyXP(actor, share).catch(console.error);
+        }
+      }
+    }
+
+    // ── Items — resolve UUIDs to full Item documents for the lottery ──
+    const rawItems     = quest.rewards?.items ?? [];
+    const resolvedItems = [];
+    for (const rewardItem of rawItems) {
+      const item = await fromUuid(rewardItem.uuid).catch(() => null);
+      if (item) {
+        resolvedItems.push(item);
+      } else {
+        // Pass a minimal stub so the setup app can still display it
+        resolvedItems.push({ name: rewardItem.name, img: rewardItem.img, stub: true });
+      }
+    }
+
+    // ── Coins — pass the full totals; Loot Roller handles distribution mode ──
+    const coins = {};
+    for (const [key, amount] of Object.entries(quest.rewards?.currency ?? {})) {
+      if (amount > 0) coins[key] = amount;
+    }
+
+    window.LootRoller.startLottery({ items: resolvedItems, coins });
+    this.close();
   }
 
   static _onCancel(event, target) {

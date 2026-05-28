@@ -72,29 +72,41 @@
       {{/if}}
     </div>
 
-    {{!-- ── Per-item recipient selection ── --}}
+    {{!-- ── Per-item recipient selection (hidden when Loot Roller is active) ── --}}
     {{#if hasRewardItems}}
-      <div class="sqt-item-dist">
-        <div class="sqt-rewards-actors-header">
-          <span>{{localize "QUESTTRACKER.Rewards.ItemDistribution"}}</span>
+      {{#unless lootRollerActive}}
+        <div class="sqt-item-dist">
+          <div class="sqt-rewards-actors-header">
+            <span>{{localize "QUESTTRACKER.Rewards.ItemDistribution"}}</span>
+          </div>
+          <ul class="sqt-item-dist-list">
+            {{#each rewardItems}}
+              <li class="sqt-item-dist-row">
+                <img src="{{img}}" class="sqt-item-dist-img">
+                <span class="sqt-item-dist-name">
+                  {{name}}{{#if (sqt-gt quantity 1)}} ×{{quantity}}{{/if}}
+                </span>
+                <select class="sqt-item-recipient" data-item-uuid="{{uuid}}">
+                  <option value="all">{{localize "QUESTTRACKER.Rewards.AllRecipients"}}</option>
+                  {{#each ../actors}}
+                    <option value="{{id}}">{{name}}</option>
+                  {{/each}}
+                </select>
+              </li>
+            {{/each}}
+          </ul>
         </div>
-        <ul class="sqt-item-dist-list">
-          {{#each rewardItems}}
-            <li class="sqt-item-dist-row">
-              <img src="{{img}}" class="sqt-item-dist-img">
-              <span class="sqt-item-dist-name">
-                {{name}}{{#if (sqt-gt quantity 1)}} ×{{quantity}}{{/if}}
-              </span>
-              <select class="sqt-item-recipient" data-item-uuid="{{uuid}}">
-                <option value="all">{{localize "QUESTTRACKER.Rewards.AllRecipients"}}</option>
-                {{#each ../actors}}
-                  <option value="{{id}}">{{name}}</option>
-                {{/each}}
-              </select>
-            </li>
-          {{/each}}
-        </ul>
-      </div>
+      {{/unless}}
+
+      {{#if lootRollerActive}}
+        <div class="sqt-loot-roller-banner">
+          <i class="fa-solid fa-dice-d20"></i>
+          <div>
+            <strong>{{localize "QUESTTRACKER.Rewards.LootRollerActive"}}</strong>
+            <p class="sqt-hint">{{localize "QUESTTRACKER.Rewards.LootRollerHint"}}</p>
+          </div>
+        </div>
+      {{/if}}
     {{/if}}
 
   {{else}}
@@ -103,9 +115,22 @@
 
   <footer class="sqt-sheet-footer">
     {{#unless noActors}}
-      <button type="button" data-action="applyRewards" class="sqt-btn sqt-primary">
-        <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.ApplyRewards"}}
-      </button>
+      {{#if lootRollerActive}}
+        {{#if hasRewardItems}}
+          <button type="button" data-action="sendToLootRoller" class="sqt-btn sqt-primary">
+            <i class="fa-solid fa-dice-d20"></i> {{localize "QUESTTRACKER.Rewards.SendToLootRoller"}}
+          </button>
+        {{/if}}
+        {{#unless hasRewardItems}}
+          <button type="button" data-action="applyRewards" class="sqt-btn sqt-primary">
+            <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.ApplyRewards"}}
+          </button>
+        {{/unless}}
+      {{else}}
+        <button type="button" data-action="applyRewards" class="sqt-btn sqt-primary">
+          <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.ApplyRewards"}}
+        </button>
+      {{/if}}
     {{/unless}}
     <button type="button" data-action="cancel" class="sqt-btn">
       <i class="fas fa-times"></i> {{localize "QUESTTRACKER.Cancel"}}

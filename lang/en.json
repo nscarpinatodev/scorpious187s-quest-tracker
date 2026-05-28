@@ -71,7 +71,10 @@
       "ToggleAll": "Toggle All",
       "ItemDistribution": "Item Recipients:",
       "AllRecipients": "— All Selected —",
-      "ChatCardTitle": "Quest Rewards Distributed"
+      "ChatCardTitle": "Quest Rewards Distributed",
+      "LootRollerActive": "Loot Roller Integration Active",
+      "LootRollerHint": "Items and currency will be sent to Loot Roller for a player lottery. XP will be distributed now.",
+      "SendToLootRoller": "Run Loot Roller Lottery"
     },
 
     "Settings": {

@@ -1441,6 +1441,41 @@ details[open] .sqt-journal-inline-title::before {
   max-width: 160px;
 }
 
+/* ── Loot Roller integration banner ─────────────────────── */
+.sqt-loot-roller-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 8px 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--sqt-accent, #7b5ea7);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--sqt-accent, #7b5ea7) 12%, var(--sqt-bg-secondary));
+}
+
+.sqt-loot-roller-banner > i {
+  font-size: 1.4em;
+  color: var(--sqt-accent, #7b5ea7);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.sqt-loot-roller-banner > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sqt-loot-roller-banner strong {
+  font-size: 0.9em;
+  color: var(--sqt-text-primary);
+}
+
+.sqt-loot-roller-banner .sqt-hint {
+  margin: 0;
+  font-size: 0.82em;
+}
+
 /* ── Reward chat card ────────────────────────────────────── */
 .sqt-chat-card {
   font-size: 0.9em;

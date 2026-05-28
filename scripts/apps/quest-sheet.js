@@ -476,10 +476,15 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       if (!quest || !items.length) return;
       const existing = quest.rewards?.items ?? [];
       const newItems = items
-        .filter(item => !existing.find(e => e.uuid === item.uuid))
+        .filter(item => item.uuid && !existing.find(e => e.uuid === item.uuid))
         .map(item => ({ uuid: item.uuid, name: item.name, img: item.img, quantity: 1 }));
       if (!newItems.length) return;
-      await QuestStore.update(this.questId, { 'rewards.items': [...existing, ...newItems] });
+      this._saving = true;
+      try {
+        await QuestStore.update(this.questId, { 'rewards.items': [...existing, ...newItems] });
+      } finally {
+        this._saving = false;
+      }
       this.render();
     });
   }

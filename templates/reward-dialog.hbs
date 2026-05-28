@@ -31,11 +31,14 @@
 
     {{!-- ── Distribution Options ── --}}
     <div class="sqt-rewards-options">
+      {{!-- Currency split hidden when Loot Roller handles distribution --}}
       {{#if currencyEnabled}}
-        <label class="sqt-toggle-row">
-          <input type="checkbox" id="sqt-split-currency" checked>
-          {{localize "QUESTTRACKER.Rewards.SplitCurrency"}}
-        </label>
+        {{#unless lootRollerActive}}
+          <label class="sqt-toggle-row">
+            <input type="checkbox" id="sqt-split-currency" checked>
+            {{localize "QUESTTRACKER.Rewards.SplitCurrency"}}
+          </label>
+        {{/unless}}
       {{/if}}
       {{#if xpEnabled}}
         <label class="sqt-toggle-row">
@@ -115,18 +118,15 @@
 
   <footer class="sqt-sheet-footer">
     {{#unless noActors}}
-      {{#if lootRollerActive}}
-        {{#if hasRewardItems}}
-          <button type="button" data-action="sendToLootRoller" class="sqt-btn sqt-primary">
-            <i class="fa-solid fa-dice-d20"></i> {{localize "QUESTTRACKER.Rewards.SendToLootRoller"}}
-          </button>
-        {{/if}}
-        {{#unless hasRewardItems}}
-          <button type="button" data-action="applyRewards" class="sqt-btn sqt-primary">
-            <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.ApplyRewards"}}
-          </button>
-        {{/unless}}
+      {{#if lootRollerActive}}{{#if hasRewardItems}}
+        <button type="button" data-action="sendToLootRoller" class="sqt-btn sqt-primary">
+          <i class="fa-solid fa-dice-d20"></i> {{localize "QUESTTRACKER.Rewards.SendToLootRoller"}}
+        </button>
       {{else}}
+        <button type="button" data-action="applyRewards" class="sqt-btn sqt-primary">
+          <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.ApplyRewards"}}
+        </button>
+      {{/if}}{{else}}
         <button type="button" data-action="applyRewards" class="sqt-btn sqt-primary">
           <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.ApplyRewards"}}
         </button>

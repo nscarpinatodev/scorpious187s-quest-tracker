@@ -220,6 +220,12 @@
         <section class="sqt-section sqt-rewards-section">
           <h2 class="sqt-section-title">
             <i class="fas fa-gift"></i> {{localize "QUESTTRACKER.Rewards.Title"}}
+            {{#if lootRollerActive}}
+              <button type="button" data-action="rollLootRoller" class="sqt-icon-btn sqt-sm sqt-inline"
+                      title="{{localize 'QUESTTRACKER.Rewards.RollLootRoller'}}">
+                <i class="fa-solid fa-dice-d20"></i>
+              </button>
+            {{/if}}
           </h2>
 
           <div class="sqt-rewards-grid">

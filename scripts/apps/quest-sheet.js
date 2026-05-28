@@ -35,6 +35,7 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       openJournal:      QuestSheetApp._onOpenJournal,
       removeRewardItem: QuestSheetApp._onRemoveRewardItem,
       pickImage:        QuestSheetApp._onPickImage,
+      rollLootRoller:   QuestSheetApp._onRollLootRoller,
     },
   };
 
@@ -94,10 +95,14 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
 
+    const lootRollerActive = !!(game.modules.get('loot-roller')?.active)
+      && typeof window.LootRoller?.openQuestRewards === 'function';
+
     return {
       ...ctx,
       quest,
       isGM: game.user.isGM,
+      lootRollerActive,
       themeId: game.settings.get(MODULE_ID, SETTINGS.THEME),
       statusOptions: Object.values(QUEST_STATUS).map(s => ({
         value: s,
@@ -463,6 +468,20 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const items = (this.quest.rewards?.items ?? []).filter(i => i.uuid !== uuid);
     await QuestStore.update(this.questId, { 'rewards.items': items });
     this.render();
+  }
+
+  static _onRollLootRoller(event, target) {
+    window.LootRoller.openQuestRewards(async (items) => {
+      const quest = this.quest;
+      if (!quest || !items.length) return;
+      const existing = quest.rewards?.items ?? [];
+      const newItems = items
+        .filter(item => !existing.find(e => e.uuid === item.uuid))
+        .map(item => ({ uuid: item.uuid, name: item.name, img: item.img, quantity: 1 }));
+      if (!newItems.length) return;
+      await QuestStore.update(this.questId, { 'rewards.items': [...existing, ...newItems] });
+      this.render();
+    });
   }
 
   static async _onPickImage(event, target) {

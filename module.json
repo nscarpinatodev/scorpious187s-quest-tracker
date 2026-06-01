@@ -1,8 +1,12 @@
 {
   "id": "scorpious187s-quest-tracker",
   "title": "Scorpious187's Quest Tracker",
-  "description": "A comprehensive quest tracker with multiple themes, drag-and-drop support, quest notes, and multi-system compatibility for D&D 5e, Pathfinder 2e, and more.",
+  "description": "A comprehensive quest tracker with multiple themes, drag-and-drop support, quest notes, and multi-system compatibility for D&D 5e, Pathfinder 2e, Fallout 2d20, and more.",
   "version": "1.0.0",
+  "url": "https://github.com/nscarpinatodev/scorpious187s-quest-tracker",
+  "manifest": "https://github.com/nscarpinatodev/scorpious187s-quest-tracker/releases/latest/download/module.json",
+  "download": "https://github.com/nscarpinatodev/scorpious187s-quest-tracker/releases/download/v1.0.0/module.zip",
+  "socket": true,
   "compatibility": {
     "minimum": "13",
     "verified": "14",
@@ -22,8 +26,5 @@
       "name": "English",
       "path": "lang/en.json"
     }
-  ],
-  "flags": {
-    "hotReload": true
-  }
+  ]
 }

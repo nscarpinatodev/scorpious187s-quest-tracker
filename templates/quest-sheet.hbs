@@ -106,14 +106,14 @@
         </div>
       </section>
 
-      {{!-- ── Description ── --}}
+      {{!-- ── Description (short summary — shown in notifications and tracker) ── --}}
       <section class="sqt-section">
         <h2 class="sqt-section-title">
           <i class="fas fa-align-left"></i> {{localize "QUESTTRACKER.Quest.Description"}}
         </h2>
         {{#if isGM}}
           <textarea name="description" class="sqt-description-editor"
-                    placeholder="Quest description…">{{quest.description}}</textarea>
+                    placeholder="{{localize 'QUESTTRACKER.Quest.DescriptionHint'}}">{{quest.description}}</textarea>
         {{else}}
           <div class="sqt-prose">{{{quest.description}}}</div>
         {{/if}}
@@ -209,7 +209,16 @@
               <i class="fas fa-book"></i> {{name}}
             </summary>
             {{#each pages}}
-              <div class="sqt-journal-page-content">{{{content}}}</div>
+              {{#if ../../isGM}}
+                {{!-- GM: live ProseMirror editor that saves back to the journal page --}}
+                <div class="sqt-journal-page-editor" data-page-uuid="{{uuid}}">
+                  {{!-- <template> is inert — safe way to pass raw HTML to JS without parsing --}}
+                  <template class="sqt-pm-seed">{{{rawContent}}}</template>
+                </div>
+              {{else}}
+                {{!-- Players: enriched read-only view --}}
+                <div class="sqt-journal-page-content">{{{content}}}</div>
+              {{/if}}
             {{/each}}
           </details>
         {{/each}}

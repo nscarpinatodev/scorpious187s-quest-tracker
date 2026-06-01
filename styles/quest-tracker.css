@@ -741,6 +741,20 @@ details[open] .sqt-journal-inline-title::before {
   transform: rotate(90deg);
 }
 
+/* ── Embedded journal editor (GM) ────────────────────────── */
+.sqt-journal-page-editor {
+  padding: 4px;
+}
+
+.sqt-journal-page-editor prose-mirror {
+  display: block;
+  min-height: 80px;
+  font-size: 0.88em;
+  color: var(--sqt-text-primary);
+  line-height: 1.6;
+}
+
+/* ── Journal read-only view (players) ───────────────────── */
 .sqt-journal-page-content {
   padding: 10px 14px;
   font-size: 0.88em;

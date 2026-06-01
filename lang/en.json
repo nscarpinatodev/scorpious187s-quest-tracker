@@ -35,7 +35,8 @@
     "Quest": {
       "Name": "Quest Name",
       "Status": "Status",
-      "Description": "Description",
+      "Description": "Short Description",
+      "DescriptionHint": "Brief summary shown in notifications and the quest tracker…",
       "Objectives": "Objectives",
       "AddObjective": "Add Objective",
       "Notes": "GM Notes",

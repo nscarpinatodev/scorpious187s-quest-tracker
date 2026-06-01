@@ -163,6 +163,27 @@ export const SYSTEM_PRESETS = {
     },
   },
 
+  fallout: {
+    id: 'fallout',
+    label: 'Fallout: The Roleplaying Game (2d20)',
+    xpEnabled: true,
+    currencyEnabled: true,
+    currency: [
+      { key: 'caps', label: 'Caps', conversion: 1 },
+    ],
+    xpPath: 'system.level.currentXP',
+    currencyPath: 'system.currency',
+    async applyXP(actor, amount) {
+      const current = foundry.utils.getProperty(actor, 'system.level.currentXP') ?? 0;
+      await actor.update({ 'system.level.currentXP': current + amount });
+    },
+    async applyCurrency(actor, currency) {
+      if (!currency.caps) return;
+      const current = foundry.utils.getProperty(actor, 'system.currency.caps') ?? 0;
+      await actor.update({ 'system.currency.caps': Math.round(current + currency.caps) });
+    },
+  },
+
   shadowrun5e: {
     id: 'shadowrun5e',
     label: 'Shadowrun 5e',

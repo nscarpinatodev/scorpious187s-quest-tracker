@@ -86,8 +86,14 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const enrichedPages = [];
       for (const page of pages) {
         if (page.type === 'text') {
-          const html = await TextEditor.enrichHTML(page.text?.content ?? '', { async: true });
-          enrichedPages.push({ name: page.name, content: html });
+          const raw  = page.text?.content ?? '';
+          const html = await TextEditor.enrichHTML(raw, { async: true });
+          enrichedPages.push({
+            uuid:       page.uuid,
+            name:       page.name,
+            content:    html,   // enriched — for player read-only view
+            rawContent: raw,    // source HTML — seeded into the GM editor
+          });
         }
       }
       if (enrichedPages.length) {
@@ -126,6 +132,9 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const titleEl = this.element.querySelector('.window-title');
     if (titleEl) titleEl.textContent = this.title;
 
+    // Spin up inline editors for linked journal pages (GM only)
+    if (context.isGM) this._initJournalEditors().catch(console.error);
+
     // All listeners go on the persistent outer element — only register once.
     // Re-renders replace inner template content but this.element stays the same,
     // so these listeners survive re-renders without needing to be re-added.
@@ -158,6 +167,42 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
     this._hookId = null;
     this._hookId_dataRefresh  = null;
     this._hookId_themeChanged = null;
+  }
+
+  // ── Inline journal editors ───────────────────────────────────────────────
+
+  /**
+   * For each linked journal text page, replace the read-only placeholder with a
+   * live ProseMirror editor. Changes are auto-saved back to the JournalEntryPage
+   * document after a short debounce. Runs after every render; existing editors
+   * are destroyed and recreated because HandlebarsApplicationMixin replaces the DOM.
+   */
+  async _initJournalEditors() {
+    await customElements.whenDefined('prose-mirror');
+
+    const saveToPage = foundry.utils.debounce(async (pageUuid, content) => {
+      const page = await fromUuid(pageUuid).catch(() => null);
+      if (page) await page.update({ 'text.content': content });
+    }, 1200);
+
+    for (const container of this.element.querySelectorAll('.sqt-journal-page-editor[data-page-uuid]')) {
+      const pageUuid = container.dataset.pageUuid;
+
+      // Raw HTML is stored in an inert <template> so Handlebars can emit it
+      // without it being parsed or executed as live DOM.
+      const rawContent = container.querySelector('template.sqt-pm-seed')?.innerHTML ?? '';
+
+      const pmEl = document.createElement('prose-mirror');
+      pmEl.setAttribute('toggled', 'false');
+      pmEl.setAttribute('collaborate', 'false');
+      container.replaceChildren(pmEl);
+
+      // Wait one task for connectedCallback to initialise the editor, then set content.
+      await new Promise(r => setTimeout(r, 0));
+      pmEl.value = rawContent;
+
+      pmEl.addEventListener('change', () => saveToPage(pageUuid, pmEl.value ?? ''));
+    }
   }
 
   // ── Permission helpers ───────────────────────────────────────────────────

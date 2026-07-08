@@ -104,6 +104,7 @@
         "SelectTheme": "Select Theme",
         "ThemeCategory": "Theme Category",
         "CustomColors": "Custom Colors",
+        "CustomColorsHint": "These colors apply when the Custom Theme is selected. They start from the currently selected theme's palette, so pick a preset close to what you want first, then fine-tune here.",
         "PrimaryBg": "Primary Background",
         "SecondaryBg": "Secondary Background",
         "PrimaryText": "Primary Text",

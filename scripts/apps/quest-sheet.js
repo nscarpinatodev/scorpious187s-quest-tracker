@@ -101,7 +101,7 @@ export class QuestSheetApp extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
 
-    const lootRollerActive = !!(game.modules.get('loot-roller')?.active)
+    const lootRollerActive = !!(game.modules.get('scorpious187s-loot-roller')?.active)
       && typeof window.LootRoller?.openQuestRewards === 'function';
 
     return {

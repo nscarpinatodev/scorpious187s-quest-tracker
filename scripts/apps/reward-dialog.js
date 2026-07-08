@@ -75,7 +75,7 @@ export class RewardDialog extends HandlebarsApplicationMixin(ApplicationV2) {
       quantity: i.quantity ?? 1,
     }));
 
-    const lootRollerActive = !!(game.modules.get('loot-roller')?.active)
+    const lootRollerActive = !!(game.modules.get('scorpious187s-loot-roller')?.active)
       && typeof window.LootRoller?.startLottery === 'function';
 
     return {

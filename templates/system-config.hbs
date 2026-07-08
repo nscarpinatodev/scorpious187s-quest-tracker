@@ -172,41 +172,25 @@
         </div>
       </div>
 
-      {{!-- Custom theme overrides (shown when "custom" is selected) --}}
+      {{!-- Custom theme overrides (applied when the Custom theme is selected) --}}
       <details class="sqt-custom-theme-details">
         <summary>{{localize "QUESTTRACKER.Settings.Theme.CustomColors"}}</summary>
-        <div class="sqt-custom-theme-grid">
-          <div class="sqt-custom-var-row">
-            <label>Primary Background</label>
-            <input type="color" class="sqt-custom-var" data-var="--sqt-bg-primary"
-                   value="{{lookup customVars '--sqt-bg-primary'}}">
-            <input type="text"  class="sqt-custom-var-hex" placeholder="#2d2d2d">
+        <p class="sqt-hint">{{localize "QUESTTRACKER.Settings.Theme.CustomColorsHint"}}</p>
+        {{#each customVarGroups}}
+          <h3 class="sqt-custom-group-title">{{label}}</h3>
+          <div class="sqt-custom-theme-grid">
+            {{#each fields}}
+              <div class="sqt-custom-var-row">
+                <label>
+                  {{label}}
+                  <span class="sqt-custom-var-hint">{{hint}}</span>
+                </label>
+                <input type="color" class="sqt-custom-var" data-var="{{varName}}" value="{{value}}">
+                <input type="text"  class="sqt-custom-var-hex" value="{{value}}" maxlength="7" spellcheck="false">
+              </div>
+            {{/each}}
           </div>
-          <div class="sqt-custom-var-row">
-            <label>Secondary Background</label>
-            <input type="color" class="sqt-custom-var" data-var="--sqt-bg-secondary"
-                   value="{{lookup customVars '--sqt-bg-secondary'}}">
-            <input type="text"  class="sqt-custom-var-hex" placeholder="#1a1a1a">
-          </div>
-          <div class="sqt-custom-var-row">
-            <label>Primary Text</label>
-            <input type="color" class="sqt-custom-var" data-var="--sqt-text-primary"
-                   value="{{lookup customVars '--sqt-text-primary'}}">
-            <input type="text"  class="sqt-custom-var-hex" placeholder="#e0e0e0">
-          </div>
-          <div class="sqt-custom-var-row">
-            <label>Accent Color</label>
-            <input type="color" class="sqt-custom-var" data-var="--sqt-accent"
-                   value="{{lookup customVars '--sqt-accent'}}">
-            <input type="text"  class="sqt-custom-var-hex" placeholder="#c9aa71">
-          </div>
-          <div class="sqt-custom-var-row">
-            <label>Border Color</label>
-            <input type="color" class="sqt-custom-var" data-var="--sqt-border"
-                   value="{{lookup customVars '--sqt-border'}}">
-            <input type="text"  class="sqt-custom-var-hex" placeholder="#4a4a4a">
-          </div>
-        </div>
+        {{/each}}
       </details>
     </section>
 

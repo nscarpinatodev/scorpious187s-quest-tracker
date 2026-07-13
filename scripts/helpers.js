@@ -1,25 +1,11 @@
-import { MODULE_ID } from './constants.js';
+import { MODULE_ID, LIB_ID } from './constants.js';
 import { SqtConfirmDialog } from './apps/confirm-dialog.js';
 
 /** Register Handlebars helpers used by SQT templates. */
 export function registerHandlebarsHelpers() {
-  Handlebars.registerHelper('sqt-eq',  (a, b) => a === b);
-  Handlebars.registerHelper('sqt-ne',  (a, b) => a !== b);
-  Handlebars.registerHelper('sqt-or',  (a, b) => a || b);
-  Handlebars.registerHelper('sqt-and', (a, b) => a && b);
-  Handlebars.registerHelper('sqt-not', (a) => !a);
-  Handlebars.registerHelper('sqt-gt',  (a, b) => a > b);
-  Handlebars.registerHelper('sqt-gte', (a, b) => a >= b);
-
-  // Only register concat if Foundry hasn't already
-  if (!Handlebars.helpers['concat']) {
-    Handlebars.registerHelper('concat', (...args) => {
-      args.pop(); // remove Handlebars options hash
-      return args.join('');
-    });
-  }
-
-  Handlebars.registerHelper('sqt-json', (v) => JSON.stringify(v));
+  // Comparison/JSON helpers (sqt-eq, sqt-ne, sqt-or, sqt-and, sqt-not,
+  // sqt-gt, sqt-gte, sqt-json, concat, ...) come from the shared library.
+  game.modules.get(LIB_ID)?.api?.utils.registerHelpers('sqt');
 
   Handlebars.registerHelper('sqt-img-or', (img, fallback) =>
     (img && img !== 'icons/svg/book.svg') ? img : fallback);

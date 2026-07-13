@@ -1,4 +1,4 @@
-import { MODULE_ID, SETTINGS, SOCKET_TYPES } from '../constants.js';
+import { MODULE_ID, LIB_ID, SETTINGS, SOCKET_TYPES } from '../constants.js';
 import { SYSTEM_PRESETS, getSystemPreset, getSystemPresetList } from '../data/system-presets.js';
 import { THEME_CATEGORIES, getTheme } from '../data/theme-presets.js';
 import { ThemeManager } from '../theme-manager.js';
@@ -106,7 +106,7 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
   async _prepareContext(options) {
     const ctx        = await super._prepareContext(options);
     const sysConfig  = game.settings.get(MODULE_ID, SETTINGS.SYSTEM_CONFIG);
-    const themeId    = game.settings.get(MODULE_ID, SETTINGS.THEME);
+    const themeId    = ThemeManager.activeThemeId();
     const customVars = game.settings.get(MODULE_ID, SETTINGS.CUSTOM_THEME);
     const notifPrefs = game.settings.get(MODULE_ID, SETTINGS.NOTIFICATIONS);
 
@@ -142,12 +142,14 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // Seed each custom color from the saved override, falling back to the
     // active theme's value so switching to Custom starts from a working palette.
+    // The shared catalog's vars use the canonical --s187-* names.
     const activeThemeVars = getTheme(themeId).vars ?? {};
+    const canonical = (varName) => '--s187-' + varName.slice('--sqt-'.length);
     const customVarGroups = CUSTOM_VAR_GROUPS.map(group => ({
       label: group.label,
       fields: group.fields.map(f => ({
         ...f,
-        value: customVars?.[f.varName] ?? activeThemeVars[f.varName] ?? '#888888',
+        value: customVars?.[f.varName] ?? activeThemeVars[canonical(f.varName)] ?? '#888888',
       })),
     }));
 
@@ -286,9 +288,16 @@ export class SystemConfigApp extends HandlebarsApplicationMixin(ApplicationV2) {
     await game.settings.set(MODULE_ID, SETTINGS.NOTIFICATIONS, data.notifs);
 
     // Save custom vars before theme so the onChange hook reads the latest custom vars.
+    // The library's settings are the family-wide authority; this module's own
+    // settings are kept as mirrors for older sibling releases that read them.
+    const canonicalVars = Object.fromEntries(
+      Object.entries(data.customVars).map(([k, v]) =>
+        ['--s187-' + k.slice('--sqt-'.length), v]));
+    await game.settings.set(LIB_ID, 'customTheme', canonicalVars);
     await game.settings.set(MODULE_ID, SETTINGS.CUSTOM_THEME, data.customVars);
 
     if (data.theme) {
+      await game.settings.set(LIB_ID, 'theme', data.theme);
       await game.settings.set(MODULE_ID, SETTINGS.THEME, data.theme);
     }
 

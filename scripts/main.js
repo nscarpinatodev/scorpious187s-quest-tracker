@@ -3,7 +3,7 @@
  * Foundry VTT v13/v14
  */
 
-import { MODULE_ID, SOCKET_TYPES, SETTINGS } from './constants.js';
+import { MODULE_ID, LIB_ID, SOCKET_TYPES, SETTINGS } from './constants.js';
 import { registerSettings, setSystemConfigApp } from './settings.js';
 import { registerHandlebarsHelpers, preloadTemplates } from './helpers.js';
 import { QuestStore } from './data/quest-store.js';
@@ -12,14 +12,77 @@ import { QuestTrackerApp } from './apps/quest-tracker.js';
 import { QuestNoteApp } from './apps/quest-note.js';
 import { SystemConfigApp } from './apps/system-config.js';
 
+// ── Theming registration (shared library) ─────────────────────────────────
+
+// Elements Foundry's stylesheet overrides with high-specificity rules; the
+// library punches through with inline !important var() references.
+const INLINE_BG_TARGETS = [
+  ['.sqt-window',         'var(--sqt-bg-primary)',   'var(--sqt-text-primary)'],
+  ['.sqt-tabbar',         'var(--sqt-bg-header)',    null],
+  ['.sqt-sheet-header',   'var(--sqt-bg-header)',    null],
+  ['.sqt-section',        'var(--sqt-bg-secondary)', null],
+  ['.sqt-config-section', 'var(--sqt-bg-secondary)', null],
+  ['.sqt-sheet-footer',   'var(--sqt-bg-secondary)', null],
+  ['.sqt-tab-content',    'var(--sqt-bg-primary)',   null],
+  ['.sqt-panels',         'var(--sqt-bg-primary)',   null],
+  ['.sqt-quest-item',     'var(--sqt-bg-item)',      null],
+  ['.sqt-actor-row',      'var(--sqt-bg-item)',      null],
+  ['.sqt-rewards-header', 'var(--sqt-bg-header)',    null],
+  ['.sqt-sheet-form',     'transparent',             null],
+  ['.sqt-sheet-body',     'transparent',             null],
+  ['.sqt-config-body',    'transparent',             null],
+];
+
+/** GM-configured font overrides, expressed as canonical --s187-* vars. */
+function fontOverrides() {
+  try {
+    const cfg = game.settings.get(MODULE_ID, SETTINGS.SYSTEM_CONFIG);
+    const overrides = {};
+    if (cfg?.fontHeading) overrides['--s187-font-heading'] = cfg.fontHeading;
+    if (cfg?.fontBody)    overrides['--s187-font-body']    = cfg.fontBody;
+    return overrides;
+  } catch { return {}; }
+}
+
+function registerLibTheming(lib) {
+  lib.theming.register({
+    moduleId: MODULE_ID,
+    prefix: '--sqt-',
+    windowClass: 'sqt-window',
+    datasetKey: 'sqtTheme',
+    inlineTargets: INLINE_BG_TARGETS,
+    extraVars: fontOverrides(),
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────
 
+// Foundry refuses to activate the module without its required lib, but guard
+// against odd states (lib disabled mid-session, load-order bugs) anyway.
+let _libMissing = false;
+
 Hooks.once('init', () => {
+  const lib = game.modules.get(LIB_ID)?.api;
+  if (!lib) {
+    _libMissing = true;
+    Hooks.once('ready', () => ui.notifications.error(
+      `${MODULE_ID} requires the "Scorpious187's Module Library" (${LIB_ID}) module. ` +
+      'Please install and enable it.'));
+    return;
+  }
+
   // Wire up the circular dependency in settings.js
   setSystemConfigApp(SystemConfigApp);
 
   registerSettings();
   registerHandlebarsHelpers();
+  registerLibTheming(lib);
+
+  // Fonts live in the system config; refresh the registration when it changes.
+  Hooks.on('sqt.systemConfigChanged', () => {
+    registerLibTheming(lib);
+    ThemeManager.apply();
+  });
 
   console.log(`${MODULE_ID} | Initialized`);
 });
@@ -31,12 +94,25 @@ let _questStatusCache    = {};
 let _objectiveStateCache = {}; // key: "questId::objectiveId", value: completed boolean
 
 Hooks.once('ready', async () => {
+  if (_libMissing) return;
   await preloadTemplates();
   await QuestStore.migrate();
   ThemeManager.apply();
 
-  // Re-apply theme on all clients whenever the world setting changes.
+  // Re-apply theme on all clients whenever the (legacy) world setting changes.
   Hooks.on('sqt.themeChanged', (id) => ThemeManager.apply(id));
+
+  // The library's family theme is the authority. Mirror it into this module's
+  // legacy theme setting so older sibling releases (which read it directly)
+  // stay in sync. World write — primary GM only.
+  Hooks.on('s187lib.themeChanged', (id) => {
+    const primaryGM = game.users.filter(u => u.isGM && u.active)
+      .sort((a, b) => a.id.localeCompare(b.id))[0];
+    if (game.user.id !== primaryGM?.id) return;
+    if (game.settings.get(MODULE_ID, SETTINGS.THEME) !== id) {
+      game.settings.set(MODULE_ID, SETTINGS.THEME, id);
+    }
+  });
 
   // Seed caches so the first questDataRefresh doesn't false-positive.
   _questStatusCache    = _buildStatusSnapshot();
